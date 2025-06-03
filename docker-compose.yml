@@ -1,0 +1,39 @@
+version: '3.8'
+
+services: # Servicio para desarrollo
+  sistemas-manager-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - '5173:5173'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env.docker
+    environment:
+      - NODE_ENV=development
+      # Las variables se cargan desde .env.docker
+    profiles:
+      - dev # Servicio para producción
+  sistemas-manager-prod:
+    build:
+      context: .
+      target: production
+      args:
+        - VITE_BACKEND_URL=${VITE_BACKEND_URL_PROD:-https://tu-backend-produccion.com}
+        - VITE_MOODLE_URL=${VITE_MOODLE_URL_PROD:-https://tu-moodle-url.com/webservice/rest/server.php}
+        - VITE_MOODLE_TOKEN=${VITE_MOODLE_TOKEN_PROD:-tu_token_moodle_produccion}
+    ports:
+      - '80:80'
+    env_file:
+      - .env.docker
+    environment:
+      - NODE_ENV=production
+    profiles:
+      - prod
+
+networks:
+  default:
+    name: sistemas-manager-network
