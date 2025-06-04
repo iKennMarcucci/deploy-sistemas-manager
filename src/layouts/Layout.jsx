@@ -10,12 +10,15 @@ const Layout = () => {
   const projectRoutes = [
     "/listado-informes",
     "/listado-proyectos",
+    "/listado-sustentaciones",
     "/estado-proyecto",
     "/seguimiento",
     "/informes",
   ]
 
-  const isProjectRoute = location.pathname.startsWith("/listado-proyectos") || location.pathname.startsWith("/listado-informes") ||
+  const isProjectRoute = location.pathname.startsWith("/listado-proyectos") ||
+    location.pathname.startsWith("/listado-informes") ||
+    location.pathname.startsWith("/listado-sustentaciones") ||
     projectRoutes.includes(location.pathname);
 
   return (

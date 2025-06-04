@@ -2,7 +2,6 @@ import { Menu as LucideMenu, X, BookPlus } from 'lucide-react'
 import ProjectMenu from '../../components/sidebar/temp/ProjectMenu'
 import { useSidebar } from '../../context/SidebarContext'
 import { PiProjectorScreenChart } from 'react-icons/pi'
-import { activeSession } from '../../lib/test/users'
 import React, { useEffect, useState } from 'react'
 import Topbar from '../../components/Topbar'
 import { Outlet } from 'react-router-dom'
@@ -14,16 +13,61 @@ import useProyectoFlag from "../../pages/estado-proyecto/test/useProyectoFlag"
 import { useAuth } from '../../lib/hooks/useAuth'
 
 const ProjectSidebar = () => {
-   const { userLoggedGetter, refreshUserFromToken } = useAuth()
+   const { userLogged, userLoggedSetter } = useAuth()
    const { selectedMenu, setSelectedMenu, selectedOption, setSelectedOption } = useSidebar()
    const toggleMenu = (index) => setSelectedMenu(selectedMenu === index ? null : index)
    const handleOptionClick = (label) => setSelectedOption(label)
    const [isOpen, setIsOpen] = useState(true)
-   const [user, setUser] = useState(userLoggedGetter())
+   const [user, setUser] = useState({
+      picture: '',
+      firstName: '',
+      lastName: '',
+      role: '',
+      email: ''
+   })
 
    useEffect(() => {
-      const refreshedUser = refreshUserFromToken()
-      setUser(refreshedUser)
+      // Obtener datos del usuario según el tipo de autenticación
+      const getUserInfo = () => {
+         // Verificar si existe un usuario de Google
+         const googleUser = localStorage.getItem('googleToken')
+         // Verificar si existe un usuario administrador
+         const adminUser = localStorage.getItem('userInfo')
+
+         if (googleUser) {
+            const usuarioObtenido = userLoggedSetter(googleUser)
+            setUser(usuarioObtenido)
+         } else if (adminUser) {
+            const usuarioObtenido = JSON.parse(adminUser)
+            setUser({
+               picture: '', // Admins no tienen foto
+               firstName: usuarioObtenido.nombre || '',
+               lastName: usuarioObtenido.apellido || '',
+               role: usuarioObtenido.role || 'admin',
+               email: usuarioObtenido.email || ''
+            })
+         } else {
+            setUser({
+               picture: '',
+               firstName: '',
+               lastName: '',
+               role: '',
+               email: ''
+            })
+         }
+      }
+
+      getUserInfo()
+
+      // Configurar un listener para actualizar si cambia el almacenamiento local
+      const handleStorageChange = () => {
+         getUserInfo()
+      }
+
+      window.addEventListener('storage', handleStorageChange)
+      return () => {
+         window.removeEventListener('storage', handleStorageChange)
+      }
    }, [])
 
    useEffect(() => { localStorage.setItem('sidebarState', JSON.stringify({ selectedMenu, selectedOption })) }, [selectedOption])
@@ -39,15 +83,15 @@ const ProjectSidebar = () => {
          </header>
          <header className={`bg-black/5 fixed top-12 z-50 h-full transition-all duration-300 overflow-hidden ${isOpen ? 'w-[240px]' : 'w-0'}`} >
             {
-               isOpen && (
+               isOpen && user && (
                   <nav className='space-y-2.5'>
                      <section className='flex items-center justify-start gap-2 p-3 my-2.5 whitespace-nowrap'>
                         <span className="max-w-14 aspect-square rounded-full overflow-hidden">
-                           <img src={activeSession.picture} alt={activeSession.email} />
+                           <img src={user.picture || "https://placehold.co/250x250/4477ba/blue?text=User"} alt={user.email} />
                         </span>
                         <span className="flex flex-col text-lg/5">
-                           <h6 className="font-bold">{activeSession.name}</h6>
-                           <p className="text-black/75 italic text-sm">{activeSession.role}</p>
+                           <h6 className="font-bold">{user.firstName + " " + user.lastName}</h6>
+                           <p className="text-black/75 italic text-sm">{user.role}</p>
                         </span>
                      </section>
                      {/* {JSON.stringify(user)} */}
@@ -160,5 +204,3 @@ const ProjectSidebar = () => {
 }
 
 export default ProjectSidebar
-
-{/* <Outlet /> */ }

@@ -2,6 +2,7 @@ import React from 'react'
 import { ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import PropTypes from 'prop-types'
+import { useAuth } from '../../../lib/hooks/useAuth'
 
 const ProjectMenu = ({
   nombre,

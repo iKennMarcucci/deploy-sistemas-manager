@@ -6,8 +6,8 @@ import { useAuth } from '../lib/hooks/useAuth'
 
 const Topbar = () => {
   const Navigate = useNavigate()
-  const { authType, logout } = useAuth()
-  
+  const { authType, logout, userLoggedSetter } = useAuth()
+
   const [nombre, setNombre] = useState('')
   const [fotoUrl, setFotoUrl] = useState('')
 
@@ -15,14 +15,14 @@ const Topbar = () => {
     // Obtener datos del usuario según el tipo de autenticación
     const getUserInfo = () => {
       // Verificar si existe un usuario de Google
-      const googleUser = localStorage.getItem('user')
+      const googleUser = localStorage.getItem('googleToken')
       // Verificar si existe un usuario administrador
       const adminUser = localStorage.getItem('userInfo')
-      
+
       if (googleUser) {
-        const user = JSON.parse(googleUser)
-        setNombre(user.nombre || '')
-        setFotoUrl(user.fotoUrl || '')
+        const user = userLoggedSetter(googleUser)
+        setNombre(user.firstName + " " + user.lastName || '')
+        setFotoUrl(user.picture || "https://placehold.co/250x250/4477ba/blue?text=User")
       } else if (adminUser) {
         const user = JSON.parse(adminUser)
         setNombre(user.nombre || '')
@@ -33,14 +33,14 @@ const Topbar = () => {
         setFotoUrl('')
       }
     }
-    
+
     getUserInfo()
-    
+
     // Configurar un listener para actualizar si cambia el almacenamiento local
     const handleStorageChange = () => {
       getUserInfo()
     }
-    
+
     window.addEventListener('storage', handleStorageChange)
     return () => {
       window.removeEventListener('storage', handleStorageChange)

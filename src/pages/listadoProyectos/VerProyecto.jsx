@@ -23,7 +23,7 @@ export default function VerProyecto() {
    const resubirInputRef = useRef(null)
 
    const { getSpecificProject, getDocuments, sendRetroalimentacion, editRetroalimentacion, deleteRetroalimentacion, editProgress, sendDocuments, deleteDocumentos } = useProject()
-   const { userLogged } = useAuth()
+   const { userLogged, userRole } = useAuth()
 
    useEffect(() => {
       const getProyectoEspecifico = async () => {
@@ -408,7 +408,7 @@ export default function VerProyecto() {
                                        ? <CircleAlert className="text-amber-400" />
                                        : <Circle className="text-gris-intermedio" />
                            }
-                           {esDirector && (
+                           {(esDirector || userRole === "ROLE_ADMIN") && (
                               <div className="flex gap-1 mt-1">
                                  <button
                                     className="text-green-600 hover:text-green-800"
@@ -438,7 +438,7 @@ export default function VerProyecto() {
                                        ? <CircleAlert className="text-amber-400" />
                                        : <Circle className="text-gris-intermedio" />
                            }
-                           {esCodirector && (
+                           {(esCodirector || userRole === "ROLE_ADMIN") && (
                               <div className="flex gap-1 mt-1">
                                  <button
                                     className="text-green-600 hover:text-green-800"
@@ -465,127 +465,129 @@ export default function VerProyecto() {
 
          <section className="flex flex-col gap-2">
             <b>Documentos del Proyecto</b>
-            {Object.keys(docsPorTipo).length > 0 ? (
-               Object.entries(docsPorTipo).map(([tipo, docs]) => (
-                  <div key={tipo} className="bg-gris-claro/50 rounded-md mb-4 p-4 border">
-                     <div className="font-bold text-base mb-1">{tipo}</div>
-                     <div className="flex flex-col gap-2">
-                        {docs.map(doc => {
-                           const misRetros = doc.retroalimentacion?.filter(r => r.email === usuarioId) || []
-                           const yaRetro = misRetros.length > 0
-                           const puedeEditarRetro =
-                              usuarioRol !== "Docente" ||
-                              (usuarioRol === "Docente" && tiposDocenteEdita.includes(doc.tipoDocumento))
-                           return (
-                              <div key={doc.id} className="bg-white flex flex-col border rounded-md p-3 gap-2">
-                                 <div className="flex items-center gap-3">
-                                    <FileText className="text-green-600" size={20} />
-                                    <div className="flex-1">
-                                       <div className="font-semibold">{doc.nombre}</div>
-                                       <div className="text-xs text-gray-500">{doc.peso}</div>
-                                    </div>
-                                    <a
-                                       href={doc.url}
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       className="flex items-center gap-1 text-blue-600 hover:underline"
-                                    >
-                                       <Download size={16} />
-                                       Descargar
-                                    </a>
-                                 </div>
-                                 {doc.retroalimentacion && doc.retroalimentacion.length > 0 && (
-                                    <div className="bg-gray-50 border rounded p-2 mt-2 flex flex-col gap-1">
-                                       <b className="text-xs mb-1">Retroalimentaciones:</b>
-                                       {doc.retroalimentacion.map(retro => (
-                                          <div key={retro.id} className="text-xs flex gap-2 items-center">
-                                             <span className="font-semibold">{retro.nombreUsuario}:</span>
-                                             {editRetroId === retro.id ? (
-                                                <>
-                                                   <textarea
-                                                      className="border rounded p-1 text-xs flex-1"
-                                                      value={editRetroValue}
-                                                      onChange={e => setEditRetroValue(e.target.value)}
-                                                      rows={2}
-                                                      disabled={sending}
-                                                   />
-                                                   <button
-                                                      className="text-green-600 hover:text-green-800"
-                                                      onClick={() => handleSaveEditRetro(retro)}
-                                                      type="button"
-                                                      disabled={sending || !editRetroValue.trim()}
-                                                   >
-                                                      <Save size={16} />
-                                                   </button>
-                                                   <button
-                                                      className="text-gray-500 hover:text-gray-800"
-                                                      onClick={() => { setEditRetroId(null); setEditRetroValue(""); }}
-                                                      type="button"
-                                                      disabled={sending}
-                                                   >
-                                                      <X size={16} />
-                                                   </button>
-                                                </>
-                                             ) : (
-                                                <>
-                                                   <span>{retro.descripcion}</span>
-                                                   {retro.emailUsuario === usuarioId && puedeEditarRetro && (
-                                                      <>
-                                                         <button
-                                                            className="text-blue-600 hover:text-blue-800"
-                                                            onClick={() => handleEditRetro(retro)}
-                                                            type="button"
-                                                            disabled={sending}
-                                                         >
-                                                            <Edit size={15} />
-                                                         </button>
-                                                         <button
-                                                            className="text-red-600 hover:text-red-800"
-                                                            onClick={() => handleDeleteRetro(retro)}
-                                                            type="button"
-                                                            disabled={sending}
-                                                         >
-                                                            <Trash2 size={15} />
-                                                         </button>
-                                                      </>
-                                                   )}
-                                                </>
-                                             )}
-                                          </div>
-                                       ))}
-                                    </div>
-                                 )}
-                                 {!yaRetro && puedeEditarRetro && (
-                                    <form
-                                       className="flex flex-col gap-2 mt-2"
-                                       onSubmit={e => {
-                                          e.preventDefault()
-                                          handleSendRetro(doc.id)
-                                       }}
-                                    >
-                                       <textarea
-                                          className="border rounded p-2 text-sm"
-                                          rows={2}
-                                          placeholder="Escribe tu retroalimentación aquí..."
-                                          value={retroInputs[doc.id] || ""}
-                                          onChange={e => handleRetroInput(doc.id, e.target.value)}
-                                          disabled={sending}
-                                       />
-                                       <button
-                                          type="submit"
-                                          className="self-end bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm"
-                                          disabled={sending || !retroInputs[doc.id] || !retroInputs[doc.id].trim()}
+            {Object.keys(docsPorTipo).filter(tipo => !tipo.startsWith("ACTA")).length > 0 ? (
+               Object.entries(docsPorTipo)
+                  .filter(([tipo]) => !tipo.startsWith("ACTA"))
+                  .map(([tipo, docs]) => (
+                     <div key={tipo} className="bg-gris-claro/50 rounded-md mb-4 p-4 border">
+                        <div className="font-bold text-base mb-1">{tipo}</div>
+                        <div className="flex flex-col gap-2">
+                           {docs.map(doc => {
+                              const misRetros = doc.retroalimentacion?.filter(r => r.email === usuarioId) || []
+                              const yaRetro = misRetros.length > 0
+                              const puedeEditarRetro =
+                                 (usuarioRol !== "Docente" ||
+                                    (usuarioRol === "Docente" && tiposDocenteEdita.includes(doc.tipoDocumento)))
+                              return puedeEditarRetro && (
+                                 <div key={doc.id} className="bg-white flex flex-col border rounded-md p-3 gap-2">
+                                    <div className="flex items-center gap-3">
+                                       <FileText className="text-green-600" size={20} />
+                                       <div className="flex-1">
+                                          <div className="font-semibold">{doc.nombre}</div>
+                                          <div className="text-xs text-gray-500">{doc.peso}</div>
+                                       </div>
+                                       <a
+                                          href={doc.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-1 text-blue-600 hover:underline"
                                        >
-                                          {sending ? "Enviando..." : "Enviar retroalimentación"}
-                                       </button>
-                                    </form>
-                                 )}
-                              </div>
-                           )
-                        })}
+                                          <Download size={16} />
+                                          Descargar
+                                       </a>
+                                    </div>
+                                    {doc.retroalimentacion && doc.retroalimentacion.length > 0 && (
+                                       <div className="bg-gray-50 border rounded p-2 mt-2 flex flex-col gap-1">
+                                          <b className="text-xs mb-1">Retroalimentaciones:</b>
+                                          {doc.retroalimentacion.map(retro => (
+                                             <div key={retro.id} className="text-xs flex gap-2 items-center">
+                                                <span className="font-semibold">{retro.nombreUsuario}:</span>
+                                                {editRetroId === retro.id ? (
+                                                   <>
+                                                      <textarea
+                                                         className="border rounded p-1 text-xs flex-1"
+                                                         value={editRetroValue}
+                                                         onChange={e => setEditRetroValue(e.target.value)}
+                                                         rows={2}
+                                                         disabled={sending}
+                                                      />
+                                                      <button
+                                                         className="text-green-600 hover:text-green-800"
+                                                         onClick={() => handleSaveEditRetro(retro)}
+                                                         type="button"
+                                                         disabled={sending || !editRetroValue.trim()}
+                                                      >
+                                                         <Save size={16} />
+                                                      </button>
+                                                      <button
+                                                         className="text-gray-500 hover:text-gray-800"
+                                                         onClick={() => { setEditRetroId(null); setEditRetroValue(""); }}
+                                                         type="button"
+                                                         disabled={sending}
+                                                      >
+                                                         <X size={16} />
+                                                      </button>
+                                                   </>
+                                                ) : (
+                                                   <>
+                                                      <span>{retro.descripcion}</span>
+                                                      {retro.emailUsuario === usuarioId && puedeEditarRetro && (
+                                                         <>
+                                                            <button
+                                                               className="text-blue-600 hover:text-blue-800"
+                                                               onClick={() => handleEditRetro(retro)}
+                                                               type="button"
+                                                               disabled={sending}
+                                                            >
+                                                               <Edit size={15} />
+                                                            </button>
+                                                            <button
+                                                               className="text-red-600 hover:text-red-800"
+                                                               onClick={() => handleDeleteRetro(retro)}
+                                                               type="button"
+                                                               disabled={sending}
+                                                            >
+                                                               <Trash2 size={15} />
+                                                            </button>
+                                                         </>
+                                                      )}
+                                                   </>
+                                                )}
+                                             </div>
+                                          ))}
+                                       </div>
+                                    )}
+                                    {!yaRetro && puedeEditarRetro && (
+                                       <form
+                                          className="flex flex-col gap-2 mt-2"
+                                          onSubmit={e => {
+                                             e.preventDefault()
+                                             handleSendRetro(doc.id)
+                                          }}
+                                       >
+                                          <textarea
+                                             className="border rounded p-2 text-sm"
+                                             rows={2}
+                                             placeholder="Escribe tu retroalimentación aquí..."
+                                             value={retroInputs[doc.id] || ""}
+                                             onChange={e => handleRetroInput(doc.id, e.target.value)}
+                                             disabled={sending}
+                                          />
+                                          <button
+                                             type="submit"
+                                             className="self-end bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm"
+                                             disabled={sending || !retroInputs[doc.id] || !retroInputs[doc.id].trim()}
+                                          >
+                                             {sending ? "Enviando..." : "Enviar retroalimentación"}
+                                          </button>
+                                       </form>
+                                    )}
+                                 </div>
+                              )
+                           })}
+                        </div>
                      </div>
-                  </div>
-               ))
+                  ))
             ) : (
                <p className="text-gris-institucional text-sm">No hay documentos para este proyecto.</p>
             )}

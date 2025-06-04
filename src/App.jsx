@@ -57,6 +57,7 @@ import Success from './pages/login/Success'
 import ListadoInformes from './pages/listadoInformes/ListadoInformes'
 import AdminProyectos from './pages/admin/proyectos/AdminProyectos'
 import AdminSustentaciones from './pages/admin/sustentaciones/AdminSustentaciones'
+import ListadoSustentaciones from './pages/listadoSustentaciones/ListadoSustentaciones'
 
 function App() {
   return (
@@ -160,6 +161,7 @@ function App() {
             <Route path='/informes' element={<Informes />} />
             <Route path='/listado-proyectos' element={<ListadoProyectos />} />
             <Route path='/listado-informes' element={<ListadoInformes />} />
+            <Route path='/listado-sustentaciones' element={<ListadoSustentaciones />} />
             <Route
               path='/listado-proyectos/:projectId'
               element={<VerProyecto />}

@@ -168,6 +168,34 @@ export default function Fase_4({ project }) {
                </div>
             </div>
          </div>
+
+         {/* Retroalimentación de los jurados */}
+         <div className="border-gris-claro rounded-md border p-4 mt-6">
+            <h6 className="font-bold mb-2">Retroalimentación de los jurados</h6>
+            {sustentaciones?.evaluadores?.filter(j => j.observaciones || j.nota !== null).length === 0 ? (
+               <div className="text-gray-400 text-sm">Aún no hay retroalimentaciones registradas.</div>
+            ) : (
+               <div className="space-y-4">
+                  {sustentaciones.evaluadores
+                     .filter(j => j.observaciones || j.nota !== null)
+                     .map((jurado, idx) => (
+                        <div key={idx} className="border rounded-md p-3 flex flex-col gap-1 bg-gray-50">
+                           <div className="flex items-center gap-2">
+                              <span className="font-semibold">{jurado.nombreUsuario}</span>
+                           </div>
+                           {jurado.observaciones && (
+                              <div className="text-gray-700 text-sm whitespace-pre-line">
+                                 {jurado.observaciones}
+                              </div>
+                           )}
+                           {typeof jurado.nota === "number" && (
+                              <div className="text-xs text-gray-500">Nota: {jurado.nota}</div>
+                           )}
+                        </div>
+                     ))}
+               </div>
+            )}
+         </div>
       </section>
    )
 }
