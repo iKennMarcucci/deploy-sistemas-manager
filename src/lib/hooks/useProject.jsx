@@ -248,12 +248,26 @@ export default function useProject() {
       }
    }
 
+   const asignarDefinitivaAction = async (id) => {
+      try {
+         let token = googleToken
+         if (!googleToken) token = accessToken
+         const data = await asignarDefinitiva({ id: id, googleToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         return null
+      }
+   }
+
    return {
       project,
       projectList,
       isError,
       error,
       getProject,
+      asignarDefinitivaAction,
       listProjects,
       createProject,
       listaGrupos,

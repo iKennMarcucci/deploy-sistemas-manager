@@ -11,7 +11,7 @@ import EliminarProyectoModal from "../../admin/EliminarProyectoModal"
 
 export default function ProjectTable({ projectList }) {
    const { obtenerDocentes, asignarDirectores, actualizarFase, deleteProject } = useAdmin()
-   const { listSustentaciones, getDocuments } = useProject()
+   const { listSustentaciones, getDocuments, asignarDefinitivaAction } = useProject()
    const [modalDirectores, setModalDirectores] = useState(null)
    const [docentes, setDocentes] = useState([])
    const [openActions, setOpenActions] = useState({})
@@ -50,12 +50,23 @@ export default function ProjectTable({ projectList }) {
    }, [openActions])
 
    const handleConfirmarCambioFase = async (proyecto) => {
-      const nuevoEstado = proyecto.estadoActual + 1
-      const res = await actualizarFase({ idProyecto: proyecto.id, faseNueva: { estadoActual: nuevoEstado } })
-      if (res) {
-         if (Array.isArray(projectList)) {
-            const idx = projectList.findIndex(p => p.id === proyecto.id)
-            if (idx !== -1) projectList[idx].estadoActual = nuevoEstado
+      if (proyecto.estadoActual !== 9) {
+         const nuevoEstado = proyecto.estadoActual + 1
+         const res = await actualizarFase({ idProyecto: proyecto.id, faseNueva: { estadoActual: nuevoEstado } })
+         if (res) {
+            if (Array.isArray(projectList)) {
+               const idx = projectList.findIndex(p => p.id === proyecto.id)
+               if (idx !== -1) projectList[idx].estadoActual = nuevoEstado
+            }
+         }
+      } else {
+         await asignarDefinitivaAction(proyecto.id)
+         const res = await actualizarFase({ idProyecto: proyecto.id, faseNueva: { estadoActual: 0 } })
+         if (res) {
+            if (Array.isArray(projectList)) {
+               const idx = projectList.findIndex(p => p.id === proyecto.id)
+               if (idx !== -1) projectList[idx].estadoActual = 0
+            }
          }
       }
       setModalProyecto(null)
@@ -138,7 +149,7 @@ export default function ProjectTable({ projectList }) {
                            {project.lineaInvestigacion?.nombre}
                         </td>
                         <td className="col-span-1">
-                           Fase {project.estadoActual ?? "-"}
+                           {project.estadoActual === 0 ? "Terminado" : `Fase ${project.estadoActual ?? "-"}`}
                         </td>
                         <td className="col-span-3">
                            {project.titulo}
@@ -161,7 +172,7 @@ export default function ProjectTable({ projectList }) {
                                  {/* Opciones según el rol */}
 
                                  {/* Subir nota de jurados: solo si estadoActual es 9 */}
-                                 {project.estadoActual === 9 && (
+                                 {(project.estadoActual === 9 && project.estadoActual !== 0) && (
                                     <button
                                        className="hover:bg-gris-claro/50 duration-150 p-2 text-left"
                                        onClick={() => handleAbrirComentariosJurados(project)}
@@ -173,12 +184,12 @@ export default function ProjectTable({ projectList }) {
                                  {esDirectorOCodirector(project) ? (
                                     <>
                                        {/* Cambiar de fase: solo si NO es fase 3 ni 7 */}
-                                       {(project.estadoActual !== 3 && project.estadoActual !== 7) && (
+                                       {(project.estadoActual !== 3 && project.estadoActual !== 7 && project.estadoActual !== 0) && (
                                           <button
                                              className="hover:bg-gris-claro/50 duration-150 p-2 text-left"
                                              onClick={() => setModalProyecto(project)}
                                           >
-                                             Cambiar de fase
+                                             {project.estadoActual !== 9 ? "Cambiar de fase" : "Finalizar proyecto"}
                                           </button>
                                        )}
 
@@ -200,13 +211,13 @@ export default function ProjectTable({ projectList }) {
                                           >
                                              Crear Sustentación
                                           </button>
-                                       ) : (
+                                       ) : project.estadoActual !== 0 && (
                                           // Cambiar de fase: solo si NO soy director/codirector y NO es fase 3 ni 7
                                           <button
                                              className="hover:bg-gris-claro/50 duration-150 p-2 text-left"
                                              onClick={() => setModalProyecto(project)}
                                           >
-                                             Cambiar de fase
+                                             {project.estadoActual !== 9 ? "Cambiar de fase" : "Finalizar proyecto"}
                                           </button>
                                        )}
 

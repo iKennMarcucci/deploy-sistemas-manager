@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { XIcon } from "lucide-react"
 import Boton from "../Boton"
 import useAdmin from "../../lib/hooks/useAdmin"
+import { BsWindowSidebar } from "react-icons/bs"
 
 const tipos = [
    { label: "Tesis", value: "TESIS" },
@@ -77,6 +78,7 @@ export default function CrearSustentacionForm({ isOpen, proyecto }) {
             }
          }
          if (seAsignaron) await actualizarFase({ idProyecto: proyecto.id, faseNueva: { estadoActual: proyecto.estadoActual + 1 } })
+         window.location.reload()
       } catch (error) {
          console.error(error)
       } finally {

@@ -6,6 +6,12 @@ import useProject from "../../lib/hooks/useProject"
 import { useAuth } from "../../lib/hooks/useAuth"
 import { Progress as ProgressBar } from "@heroui/progress"
 import Boton from "../../components/Boton"
+import CoverSection from "../../components/proyectos/estado-proyecto/terminado/CoverSection"
+import { Tab, Tabs } from "@heroui/tabs"
+import DocumentoTab from "../../components/proyectos/estado-proyecto/terminado/DocumentoTab"
+import ResumenTab from "../../components/proyectos/estado-proyecto/terminado/ResumenTab"
+import ArticuloTab from "../../components/proyectos/estado-proyecto/terminado/ArticuloTab"
+import DiapositivaTab from "../../components/proyectos/estado-proyecto/terminado/DiapositivaTab"
 
 export default function VerProyecto() {
    const params = useParams()
@@ -240,6 +246,29 @@ export default function VerProyecto() {
       setActaToResubir(null)
       setResubirFile(null)
       if (resubirInputRef.current) resubirInputRef.current.value = ""
+   }
+   if (project?.estadoActual === 0) {
+      return (
+         <main className="flex flex-col gap-4 h-full">
+            <CoverSection currentProject={project} />
+            <section className="p-6 mx-auto w-full max-w-5xl pb-40">
+               <Tabs aria-label="Opciones" classNames={{ base: "w-full", tabList: "bg-gris-claro w-full rounded-md" }}>
+                  <Tab key="resumen" title="Resumen">
+                     <ResumenTab currentProject={project} />
+                  </Tab>
+                  <Tab key="documento" title="Documento de Tesis">
+                     <DocumentoTab currentProject={project} listDocumentos={documentos.filter(doc => doc.tipoDocumento === "TESIS") || []} />
+                  </Tab>
+                  <Tab key="articulo" title="Artículo Científico">
+                     <ArticuloTab currentProject={project} listDocumentos={documentos.filter(doc => doc.tipoDocumento === "TESIS") || []} />
+                  </Tab>
+                  <Tab key="diapositivas" title="Presentación">
+                     <DiapositivaTab currentProject={project} listDocumentos={documentos.filter(doc => doc.tipoDocumento === "TESIS") || []} />
+                  </Tab>
+               </Tabs>
+            </section>
+         </main>
+      )
    }
 
    return project && (

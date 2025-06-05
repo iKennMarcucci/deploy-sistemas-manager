@@ -8,8 +8,6 @@ import { Outlet } from 'react-router-dom'
 import { ShieldUser } from 'lucide-react'
 import { Users } from 'lucide-react'
 import { User } from 'lucide-react'
-
-import useProyectoFlag from "../../pages/estado-proyecto/test/useProyectoFlag"
 import { useAuth } from '../../lib/hooks/useAuth'
 
 const ProjectSidebar = () => {
@@ -85,12 +83,12 @@ const ProjectSidebar = () => {
             {
                isOpen && user && (
                   <nav className='space-y-2.5'>
-                     <section className='flex items-center justify-start gap-2 p-3 my-2.5 whitespace-nowrap'>
-                        <span className="max-w-14 aspect-square rounded-full overflow-hidden">
-                           <img src={user.picture || "https://placehold.co/250x250/4477ba/blue?text=User"} alt={user.email} />
+                     <section className='flex items-center justify-center gap-2 my-2.5'>
+                        <span className="max-w-12 ml-2.5 aspect-square rounded-full overflow-hidden">
+                           <img src={user.picture || `https://placehold.co/250x250/4477ba/blue?text=User`} alt={user.email} />
                         </span>
                         <span className="flex flex-col text-lg/5">
-                           <h6 className="font-bold">{user.firstName + " " + user.lastName}</h6>
+                           <h6 className="font-bold text-sm">{user.firstName + " " + user.lastName}</h6>
                            <p className="text-black/75 italic text-sm">{user.role}</p>
                         </span>
                      </section>

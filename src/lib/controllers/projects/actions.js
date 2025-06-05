@@ -113,10 +113,12 @@ export const actualizarProgreso = async ({ body, id, googleToken }) => {
    }
 }
 
-export const asignarDefinitiva = async ({ body, id }) => {
+export const asignarDefinitiva = async ({ id, googleToken }) => {
    try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/${import.meta.env.VITE_API_PROYECTOS}/${id}/definitiva`, JSON.stringify(body))
-      if (!response.ok) throw new Error('Error al ELIMINAR el proyecto.')
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/${import.meta.env.VITE_API_PROYECTOS}/definitiva?idProyecto=${id}&tipoSustentacion=TESIS`,
+         { headers: { "Content-Type": "application/json", Authorization: `Bearer ${googleToken}` } })
+
+      if (response.status !== 200) throw new Error('Error al ASIGNAR la nota definitiva.')
 
       const data = await response.json()
       return data

@@ -11,10 +11,12 @@ import Fase_9 from "../../components/proyectos/seguimiento/fases/Fase_9"
 import { Circle } from "lucide-react"
 import { useState } from "react"
 import useProject from "../../lib/hooks/useProject"
+import { useNavigate } from "react-router-dom"
 
 export default function Seguimiento() {
 
    const { getProject } = useProject()
+   const navigate = useNavigate()
 
    const [currentProject, setCurrentProject] = useState(null)
    const [isLoading, setIsLoading] = useState(true)
@@ -37,6 +39,13 @@ export default function Seguimiento() {
       }
       fetchProject()
    }, [])
+
+   // Redirigir si el proyecto está terminado
+   useEffect(() => {
+      if (currentProject && currentProject.estadoActual === 0) {
+         navigate("/estado-proyecto")
+      }
+   }, [currentProject, navigate])
 
    // Solo definir fasesData cuando currentProject está disponible
    const fasesData = currentProject ? [

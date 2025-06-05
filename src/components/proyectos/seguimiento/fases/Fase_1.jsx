@@ -81,6 +81,7 @@ export default function Fase_1({ project }) {
             estadoActual: 1
          })
          setFormData(normalizaFormData(res))
+         window.location.reload()
          return
       }
    }

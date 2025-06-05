@@ -88,6 +88,7 @@ export default function SustentacionTable({ sustentaciones }) {
          }
       })
       setModalCalificar(null)
+      window.location.reload()
    }
 
    return (
