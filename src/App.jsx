@@ -58,6 +58,7 @@ import ListadoInformes from './pages/listadoInformes/ListadoInformes'
 import AdminProyectos from './pages/admin/proyectos/AdminProyectos'
 import AdminSustentaciones from './pages/admin/sustentaciones/AdminSustentaciones'
 import ListadoSustentaciones from './pages/listadoSustentaciones/ListadoSustentaciones'
+import ListadoGruposDocente from './pages/listadoInformes/ListadosGruposDocente'
 
 function App() {
   return (
@@ -160,7 +161,8 @@ function App() {
             <Route path='/seguimiento' element={<Seguimiento />} />
             <Route path='/informes' element={<Informes />} />
             <Route path='/listado-proyectos' element={<ListadoProyectos />} />
-            <Route path='/listado-informes' element={<ListadoInformes />} />
+            <Route path='/listado-informes' element={<ListadoGruposDocente />} />
+            <Route path='/listado-informes/:grupoId' element={<ListadoInformes />} />
             <Route path='/listado-sustentaciones' element={<ListadoSustentaciones />} />
             <Route
               path='/listado-proyectos/:projectId'

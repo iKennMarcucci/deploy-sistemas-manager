@@ -1,4 +1,4 @@
-import { eliminarInformeArchivo, entregarInforme, obtenerEntregaInformes, obtenerInformes } from "../controllers/informes/actions"
+import { crearColoquio, editarColoquio, eliminarInformeArchivo, entregarInforme, listarDocumentosDeEntregaColoquio, listarEntregasColoquio, listarGruposDocente, listarInformesDocente, obtenerEntregaInformes, obtenerInformes } from "../controllers/informes/actions"
 
 export default function useInformes() {
    const googleToken = localStorage.getItem("googleToken")
@@ -51,5 +51,68 @@ export default function useInformes() {
          throw error
       }
    }
-   return { getInformes, sendInforme, getEntregaInformes, deleteInformeArchivo }
+
+   const listGruposDocente = async () => {
+      try {
+         const data = await listarGruposDocente({ googleToken })
+         return data
+      } catch (error) {
+         console.error("Error al obtener la lista de grupos del docente:", error)
+         throw error
+      }
+   }
+
+   const listInformesDocente = async (id) => {
+      try {
+         const data = await listarInformesDocente({ googleToken: googleToken, id: id })
+         return data
+      } catch (error) {
+         console.error("Error al obtener la lista de grupos del docente:", error)
+         throw error
+      }
+   }
+
+   const createColoquio = async (body) => {
+      try {
+         const data = await crearColoquio({ googleToken: googleToken, body: body })
+         return data
+      } catch (error) {
+         console.error("Error al obtener la lista de grupos del docente:", error)
+         throw error
+      }
+   }
+
+   const editColoquio = async (body, id) => {
+      try {
+         const data = await editarColoquio({ googleToken: googleToken, body: body, id: id })
+         return data
+      } catch (error) {
+         console.error("Error al obtener la lista de grupos del docente:", error)
+         throw error
+      }
+   }
+
+   const listEntregasColoquio = async (id) => {
+      try {
+         const data = await listarEntregasColoquio({ googleToken: googleToken, id: id })
+         return data
+      } catch (error) {
+         console.error("Error al obtener la lista de grupos del docente:", error)
+         throw error
+      }
+   }
+
+   const listDocumentosEntregasColoquio = async (idColoquio, idEstudiante) => {
+      try {
+         const data = await listarDocumentosDeEntregaColoquio({ googleToken: googleToken, idColoquio: idColoquio, idEstudiante: idEstudiante })
+         return data
+      } catch (error) {
+         console.error("Error al obtener la lista de grupos del docente:", error)
+         throw error
+      }
+   }
+
+
+
+   return { getInformes, listEntregasColoquio, listDocumentosEntregasColoquio, editColoquio, sendInforme, getEntregaInformes, deleteInformeArchivo, listGruposDocente, listInformesDocente, createColoquio }
 }
