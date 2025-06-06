@@ -2,7 +2,7 @@ import { Download, ChevronRight, ExternalLink } from "lucide-react"
 import Boton from "../../../Boton"
 
 export default function DocumentoTab({ currentProject, listDocumentos = [] }) {
-   const documentos = listDocumentos.filter(doc => doc.tag === "DOCUMENTO_TESIS") || []
+   const documentos = listDocumentos.filter(doc => doc.tag && doc.tag.startsWith("DOCUMENTO_TESIS")) || []
 
    return (
       <div className="flex gap-4">
@@ -21,24 +21,32 @@ export default function DocumentoTab({ currentProject, listDocumentos = [] }) {
 
                {/* Lista de documentos */}
                <div className="flex flex-col gap-2">
-                  {documentos.length > 0 ? documentos.map(doc => (
-                     <div key={doc.id} className="flex justify-between items-center gap-2 border border-gris-claro rounded-md p-2 bg-gray-50">
-                        <span className="font-bold">{doc.nombre}</span>
-                        <div className="flex items-center gap-2">
-                           <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                              <Boton variant="whitered" className="ml-2">
-                                 Ver PDF <ExternalLink size={16} />
-                              </Boton>
-                           </a>
-                           <a href={doc.url} download>
-                              <Boton variant="borderwhite" className="ml-2">
-                                 Descargar <Download size={16} />
-                              </Boton>
-                           </a>
+                  {documentos.length > 0 ? documentos.map(art => {
+                     // Extraer versión del tag
+                     let version = "v1"
+                     const match = art.tag.match(/_v(\d+)$/)
+                     if (match) version = `v${match[1]}`
+                     return (
+                        <div key={art.id} className="flex justify-between items-center gap-2 border border-gris-claro rounded-md p-2 bg-gray-50">
+                           <span className="font-bold">
+                              {art.nombre} <span className="text-xs text-gray-500 font-normal">({version})</span>
+                           </span>
+                           <div className="flex items-center gap-2">
+                              <a href={art.url} target="_blank" rel="noopener noreferrer">
+                                 <Boton variant="whitered" className="ml-2">
+                                    Ver Documento <ExternalLink size={16} />
+                                 </Boton>
+                              </a>
+                              <a href={art.url} download>
+                                 <Boton variant="borderwhite" className="ml-2">
+                                    Descargar <Download size={16} />
+                                 </Boton>
+                              </a>
+                           </div>
                         </div>
-                     </div>
-                  )) : (
-                     <span className="text-gray-400 italic">No hay documentos de tesis</span>
+                     )
+                  }) : (
+                     <span className="text-gray-400 italic">No hay documentos disponibles</span>
                   )}
                </div>
             </div>

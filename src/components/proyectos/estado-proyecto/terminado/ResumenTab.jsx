@@ -5,7 +5,6 @@ export default function ResumenTab({ currentProject }) {
    const director = currentProject.usuariosAsignados?.find(u => u.rol.nombre.toLowerCase() === "director")
    const codirector = currentProject.usuariosAsignados?.find(u => u.rol.nombre.toLowerCase() === "codirector")
 
-   // Formatea fecha a "dd/mm/yyyy"
    const formatDate = (dateStr) => {
       if (!dateStr) return ""
       const d = new Date(dateStr)
@@ -119,7 +118,7 @@ export default function ResumenTab({ currentProject }) {
             <div className="border border-gris-claro rounded-md p-6 bg-white/80 flex flex-col gap-2">
                <h3 className="font-bold text-xl text-rojo-mate">Definitiva</h3>
                <span className="bg-success/10 text-success font-bold rounded-full px-3 py-1 text-xs w-fit">
-                  {currentProject.definitiva.calificacion || "N/A"}
+                  {currentProject.definitiva?.calificacion || "N/A"}
                </span>
             </div>
          </div>

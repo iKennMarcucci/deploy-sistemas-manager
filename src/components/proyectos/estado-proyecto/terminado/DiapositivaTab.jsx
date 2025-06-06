@@ -3,7 +3,7 @@ import Boton from "../../../Boton"
 
 export default function DiapositivaTab({ currentProject, listDocumentos = [] }) {
    // Filtra los documentos de tipo PRESENTACION_TESIS
-   const presentaciones = listDocumentos.filter(doc => doc.tag === "PRESENTACION_TESIS") || []
+   const presentaciones = listDocumentos.filter(doc => doc.tag && doc.tag.startsWith("PRESENTACION_TESIS")) || []
 
    return (
       <div className="flex gap-4">
@@ -22,24 +22,32 @@ export default function DiapositivaTab({ currentProject, listDocumentos = [] }) 
 
             {/* Lista de presentaciones */}
             <div className="flex flex-col gap-2 mt-2">
-               {presentaciones.length > 0 ? presentaciones.map(pres => (
-                  <div key={pres.id} className="flex justify-between items-center gap-2 border border-gris-claro rounded-md p-2 bg-gray-50">
-                     <span className="font-bold">{pres.nombre}</span>
-                     <div className="flex items-center gap-2">
-                        <a href={pres.url} target="_blank" rel="noopener noreferrer">
-                           <Boton variant="whitered" className="ml-2">
-                              Ver Presentación <ExternalLink size={16} />
-                           </Boton>
-                        </a>
-                        <a href={pres.url} download>
-                           <Boton variant="borderwhite" className="ml-2">
-                              Descargar <Download size={16} />
-                           </Boton>
-                        </a>
+               {presentaciones.length > 0 ? presentaciones.map(art => {
+                  // Extraer versión del tag
+                  let version = "v1"
+                  const match = art.tag.match(/_v(\d+)$/)
+                  if (match) version = `v${match[1]}`
+                  return (
+                     <div key={art.id} className="flex justify-between items-center gap-2 border border-gris-claro rounded-md p-2 bg-gray-50">
+                        <span className="font-bold">
+                           {art.nombre} <span className="text-xs text-gray-500 font-normal">({version})</span>
+                        </span>
+                        <div className="flex items-center gap-2">
+                           <a href={art.url} target="_blank" rel="noopener noreferrer">
+                              <Boton variant="whitered" className="ml-2">
+                                 Ver Presentación <ExternalLink size={16} />
+                              </Boton>
+                           </a>
+                           <a href={art.url} download>
+                              <Boton variant="borderwhite" className="ml-2">
+                                 Descargar <Download size={16} />
+                              </Boton>
+                           </a>
+                        </div>
                      </div>
-                  </div>
-               )) : (
-                  <span className="text-gray-400 italic">No hay presentaciones</span>
+                  )
+               }) : (
+                  <span className="text-gray-400 italic">No hay defensa de tesis disponible</span>
                )}
             </div>
          </div>
