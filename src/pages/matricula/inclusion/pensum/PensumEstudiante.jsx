@@ -13,7 +13,6 @@ const PensumEstudiante = () => {
       .then((response) => response.json())
       .then((data) => {
         setPensum(data)
-        console.log(data)
       })
       .catch((error) => {
         console.error('Error fetching data:', error)

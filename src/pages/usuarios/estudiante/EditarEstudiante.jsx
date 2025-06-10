@@ -337,9 +337,7 @@ const EditarEstudiante = () => {
         `&users[0][lastname]=${[primerApellido, segundoApellido].filter(Boolean).join(' ')}` +
         `&users[0][email]=${correo}`
     ).then((response) => {
-      if (response.ok) {
-        console.log('Estudiante actualizado en Moodle')
-      } else {
+      if (!response.ok) {
         console.error('Error al actualizar el estudiante en Moodle')
       }
     })

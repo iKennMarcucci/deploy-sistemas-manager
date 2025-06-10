@@ -10,6 +10,7 @@ const Pensum = () => {
   const [pensums, setPensums] = useState([])
   const [programas, setProgramas] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoPensums, setCargandoPensums] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   // Estados para el modal y formulario
@@ -59,6 +60,7 @@ const Pensum = () => {
   }, [])
 
   const cargarDatos = async () => {
+    setCargandoPensums(true)
     try {
       // Cargar pensums
       const pensumResponse = await fetch(`${backendUrl}/pensums/listar`)
@@ -72,6 +74,8 @@ const Pensum = () => {
     } catch (error) {
       // Reemplazar console.error por AlertaModal
       mostrarAlerta('Error al cargar los datos', 'error', 'Error de conexión')
+    } finally {
+      setCargandoPensums(false)
     }
   }
 
@@ -231,35 +235,20 @@ const Pensum = () => {
         .filter((semestre) => semestre.moodleId === null)
         .sort((a, b) => a.numero - b.numero) // Ordenar por número de semestre
 
-      console.log(
-        'Orden de procesamiento de semestres:',
-        semestresParaProcesar.map((s) => `${s.nombre} (${s.numero})`)
-      )
-
       // Procesar secuencialmente cada semestre
       let todosProcesadosCorrectamente = true
 
       // Usar un bucle for...of para manejar las promesas de manera secuencial
       for (const semestre of semestresParaProcesar) {
         try {
-          console.log(
-            `Iniciando creación del semestre ${semestre.nombre} (${semestre.numero})`
-          )
-
           // Paso 1: Crear la categoría en Moodle
           const moodleId = await crearCategoriaSemestreEnMoodle(
             semestre,
             programaData
           )
-          console.log(
-            `Categoría creada en Moodle para semestre ${semestre.nombre} con ID: ${moodleId}`
-          )
 
           // Paso 2: Actualizar el ID en el backend
           await actualizarMoodleIdSemestre(semestre.id, moodleId)
-          console.log(
-            `MoodleID actualizado en backend para semestre ${semestre.nombre}`
-          )
         } catch (error) {
           console.error(
             `Error procesando semestre ${semestre.nombre} (${semestre.numero}):`,
@@ -397,17 +386,8 @@ const Pensum = () => {
 
   return (
     <div className='w-full p-4 flex flex-col items-center justify-center'>
-      <p className='text-titulos'>Lista de pénsums</p>
-      <div className='w-full my-8'>
-        <Tabla
-          informacion={informacion}
-          columnas={columnas}
-          filtros={filtros}
-          acciones={acciones}
-          elementosPorPagina={10}
-        />
-      </div>
-      <div className='w-full flex justify-end mt-8'>
+      <div className='w-full flex items-center justify-between mb-8'>
+        <p className='text-center text-titulos flex-1'>Lista de pénsums</p>
         <Boton
           onClick={() => {
             limpiarFormulario()
@@ -416,6 +396,16 @@ const Pensum = () => {
         >
           Crear pensum
         </Boton>
+      </div>
+      <div className='w-full my-8'>
+        <Tabla
+          informacion={informacion}
+          columnas={columnas}
+          filtros={filtros}
+          acciones={acciones}
+          elementosPorPagina={10}
+          cargandoContenido={cargandoPensums}
+        />
       </div>
 
       {/* Modal para crear/editar pensum */}

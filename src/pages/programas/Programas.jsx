@@ -18,6 +18,7 @@ const Programas = () => {
   const [programasPosgrado, setProgramasPosgrado] = useState([])
   const [programasPregrado, setProgramasPregrado] = useState([])
   const [tiposPrograma, setTiposPrograma] = useState([])
+  const [cargandoProgramas, setCargandoProgramas] = useState(true)
   const [modoEdicion, setModoEdicion] = useState(false)
   const [programaId, setProgramaId] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -57,6 +58,7 @@ const Programas = () => {
   }
 
   useEffect(() => {
+    setCargandoProgramas(true)
     fetch(`${backendUrl}/programas/listar`)
       .then((response) => response.json())
       .then((data) => {
@@ -78,6 +80,7 @@ const Programas = () => {
           (programa) => programa.esPosgrado === false
         )
         setProgramasPregrado(pregrado)
+        setCargandoProgramas(false)
       })
 
     fetch(`${backendUrl}/programas/tipos-programa`)
@@ -88,6 +91,7 @@ const Programas = () => {
   }, [])
 
   const cargarProgramas = async () => {
+    setCargandoProgramas(true)
     fetch(`${backendUrl}/programas/listar`)
       .then((response) => response.json())
       .then((data) => {
@@ -109,11 +113,11 @@ const Programas = () => {
           (programa) => programa.esPosgrado === false
         )
         setProgramasPregrado(pregrado)
+        setCargandoProgramas(false)
       })
   }
   // Añadir este método para cargar los datos al editar
   const prepararEdicion = (programa) => {
-    console.log('Preparando edición para el programa:', programa)
     setCodigo(programa.codigo)
     setPrograma(programa.nombre)
     setPosgrado(programa.esPosgrado)
@@ -200,9 +204,7 @@ const Programas = () => {
               body: JSON.stringify(body)
             })
               .then((response) => response.json())
-              .then((data) => {
-                console.log('Moodle ID actualizado:', data)
-
+              .then(() => {
                 // Paso 3: Crear la categoría "Histórico" como hijo del programa en Moodle
                 return fetch(
                   `${moodleUrl}?wstoken=${moodleToken}&moodlewsrestformat=json&wsfunction=core_course_create_categories&categories[0][name]=Histórico&categories[0][parent]=${programaMoodleId}&categories[0][description]=Histórico de cursos del programa ${programaResponse.nombre}`
@@ -227,8 +229,8 @@ const Programas = () => {
                 })
               })
               .then((response) => response.json())
-              .then((data) => {
-                console.log('Histórico Moodle ID vinculado:', data)
+              .then(() => {
+                // Histórico Moodle ID vinculado exitosamente
               })
               .catch((error) => {
                 console.error(
@@ -376,7 +378,18 @@ const Programas = () => {
 
   return (
     <div className='p-4 w-full flex flex-col items-center justify-center'>
-      <p className='text-center text-titulos'>Lista de programas de posgrado</p>
+      <div className='w-full flex items-center justify-between mb-8'>
+        <p className='text-center text-titulos flex-1'>
+          Lista de programas de posgrado
+        </p>
+        <Boton
+          onClick={() => {
+            setIsOpen(true)
+          }}
+        >
+          Crear programa
+        </Boton>
+      </div>
       <div className='w-full mb-8'>
         <Tabla
           informacion={programasPosgrado}
@@ -384,6 +397,7 @@ const Programas = () => {
           filtros={filtros}
           acciones={acciones}
           elementosPorPagina={5}
+          cargandoContenido={cargandoProgramas}
         />
       </div>
       <p className='text-center text-titulos mt-8'>
@@ -396,16 +410,8 @@ const Programas = () => {
           filtros={filtros}
           acciones={acciones}
           elementosPorPagina={5}
+          cargandoContenido={cargandoProgramas}
         />
-      </div>
-      <div className='w-full flex justify-end mt-16'>
-        <Boton
-          onClick={() => {
-            setIsOpen(true)
-          }}
-        >
-          Crear programa
-        </Boton>
       </div>
       <Modal
         size='xl'

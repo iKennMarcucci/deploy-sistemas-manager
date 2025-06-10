@@ -246,7 +246,7 @@ export default function ProjectTable({ projectList }) {
 
 
                                        {/* ELIMINAR PROYECTO SOLO ADMIN */}
-                                       {userRole === "ROLE_ADMIN" &&
+                                       {(userRole === "ROLE_ADMIN" || userRole === "ROLE_SUPERADMIN") &&
                                           <button
                                              className="hover:bg-rojo-claro text-red-500 duration-150 p-2 text-left"
                                              onClick={() => setModalEliminarProyecto(project)}

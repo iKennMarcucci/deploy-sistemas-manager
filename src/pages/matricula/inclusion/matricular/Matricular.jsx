@@ -1,18 +1,17 @@
 import { useEffect } from 'react'
 import { useState } from 'react'
 import Tabla from '../../../../components/Tabla'
-import { ArrowRightFromLine, X, ArrowLeft, ClipboardList, Mail } from 'lucide-react'
+import { ArrowRightFromLine, X, ArrowLeft, Mail } from 'lucide-react'
 import Boton from '../../../../components/Boton'
 import { useNavigate } from 'react-router-dom'
 import { useParams } from 'react-router-dom'
 import Modal from '../../../../components/Modal'
 import AlertaModal from '../../../../components/AlertaModal'
 
-
-
 const Matricular = () => {
   const { id } = useParams()
   const [user, setUser] = useState([])
+  const [cargandoMaterias, setCargandoMaterias] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
   const Navigate = useNavigate()
   const [materiasMatriculadas, setMateriasMatriculadas] = useState([])
@@ -21,7 +20,8 @@ const Matricular = () => {
   const [cambiosMatricula, setCambiosMatricula] = useState([])
 
   // Estado para modal de confirmación de reenvío
-  const [isConfirmReenvioModalOpen, setIsConfirmReenvioModalOpen] = useState(false)
+  const [isConfirmReenvioModalOpen, setIsConfirmReenvioModalOpen] =
+    useState(false)
   const [enviandoCorreo, setEnviandoCorreo] = useState(false)
 
   // Estados para AlertaModal
@@ -39,17 +39,13 @@ const Matricular = () => {
   const showAlerta = (mensaje, tipo, titulo) => {
     setAlertaMessage(mensaje)
     setAlertaType(tipo)
-    setAlertaTitulo(titulo || (tipo === 'success' ? 'Operación exitosa' : 'Error'))
+    setAlertaTitulo(
+      titulo || (tipo === 'success' ? 'Operación exitosa' : 'Error')
+    )
     setAlertaModalOpen(true)
   }
 
   // Función para formatear valores en la tabla, especialmente las notas
-  const formatearDatoTabla = (valor, columna, item) => {
-    if (columna === 'Nota') {
-      return <NotaColoreada nota={valor} />;
-    }
-    return valor;
-  };
 
   //--------------Uso de los estados------------------
   useEffect(() => {
@@ -70,8 +66,12 @@ const Matricular = () => {
         }
         setUser(estudianteFormateado)
       })
-      .catch((error) => {
-        showAlerta('Error al obtener información del estudiante', 'error', 'Error de conexión')
+      .catch(() => {
+        showAlerta(
+          'Error al obtener información del estudiante',
+          'error',
+          'Error de conexión'
+        )
       })
   }, [])
 
@@ -86,8 +86,12 @@ const Matricular = () => {
         .then((data) => {
           setCorreoEnviado(data)
         })
-        .catch((error) => {
-          showAlerta('Error al verificar estado de correo', 'error', 'Error de conexión')
+        .catch(() => {
+          showAlerta(
+            'Error al verificar estado de correo',
+            'error',
+            'Error de conexión'
+          )
         })
     }
   }, [user])
@@ -96,86 +100,55 @@ const Matricular = () => {
 
   const cargarInformacion = () => {
     if (user && user.Id) {
-      // Cargar pensum del estudiante
-      fetch(`${backendUrl}/matriculas/pensum/estudiante/${user.Id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          const enCurso = []
-          const noMatriculadas = []
+      setCargandoMaterias(true)
 
-          data.forEach((semestre) => {
-            semestre.materias.forEach((materia) => {
-              const materiaConSemestre = {
-                Código: materia.codigo,
-                Nombre: materia.nombre,
-                Créditos: materia.creditos,
-                semestreAprobado: semestre.semestreAprobado,
-                estadoId: materia.estadoId,
-                colorCard: materia.colorCard,
-                estadoNombre: materia.estadoNombre,
-                Semestre: semestre.semestrePensum
-              }
-
-              // Las materias del pensum ya no las usamos para la tabla de matriculadas
-              if (materia.estadoNombre === 'No matriculada' || materia.estadoNombre === 'Anulada') {
-                noMatriculadas.push(materiaConSemestre)
-              }
+      Promise.all([
+        fetch(
+          `${backendUrl}/matriculas/materias/nomatriculadas/${user.Id}`
+        ).then((response) => response.json()),
+        fetch(`${backendUrl}/matriculas/estudiante/${user.Id}`).then(
+          (response) => response.json()
+        )
+      ])
+        .then(([noMatriculadasData, matriculadasData]) => {
+          // Formatear las materias no matriculadas
+          const noMatriculadasFormateadas = noMatriculadasData.map(
+            (materia) => ({
+              Id: materia.id,
+              Código: materia.codigo,
+              Nombre: materia.nombre,
+              Créditos: materia.creditos,
+              Semestre: materia.semestre
             })
-          })
-        })
-        .catch((error) => {
-          showAlerta('Error al cargar el pensum del estudiante', 'error', 'Error de conexión')
-        })
+          )
 
-      // Cargar materias no matriculadas
-      fetch(`${backendUrl}/matriculas/materias/nomatriculadas/${user.Id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          // Formatear los datos para que coincidan con la estructura esperada
-          const noMatriculadasFormateadas = data.map((materia) => ({
-            Id: materia.id,
-            Código: materia.codigo,
-            Nombre: materia.nombre,
-            Créditos: materia.creditos,
-            Semestre: materia.semestre
-            // No incluimos campo Nota para materias no matriculadas
-          }))
-
-          // Actualizar el estado con las materias no matriculadas
-          setMateriasPorEstado((prevState) => ({
-            ...prevState,
-            noMatriculadas: noMatriculadasFormateadas
-          }))
-        })
-        .catch((error) => {
-          showAlerta('Error al cargar materias no matriculadas', 'error', 'Error de conexión')
-        })
-
-      // Cargar materias matriculadas con sus notas
-      fetch(`${backendUrl}/matriculas/estudiante/${user.Id}`)
-        .then((response) => response.json())
-        .then((data) => {
           // Guardar datos completos de matriculas
-          setMateriasMatriculadas(data)
+          setMateriasMatriculadas(matriculadasData)
 
           // Procesar las materias para la tabla, incluyendo las notas
-          const materiasEnCurso = data.map(materia => ({
-            Id: materia.id, // Incluir ID para poder cancelar la matrícula
+          const materiasEnCurso = matriculadasData.map((materia) => ({
+            Id: materia.id,
             Código: materia.codigoMateria,
             Nombre: materia.nombreMateria,
             Créditos: materia.creditos,
             Semestre: materia.semestreMateria,
-            Nota: materia.nota // Incluir la nota de la matrícula
-          }));
+            Nota: materia.nota
+          }))
 
-          // Actualizar el estado de las materias matriculadas con las notas
-          setMateriasPorEstado(prevState => ({
-            ...prevState,
+          // Actualizar ambos estados
+          setMateriasPorEstado({
+            noMatriculadas: noMatriculadasFormateadas,
             enCurso: materiasEnCurso
-          }));
+          })
+          setCargandoMaterias(false)
         })
-        .catch((error) => {
-          showAlerta('Error al cargar materias matriculadas', 'error', 'Error de conexión')
+        .catch(() => {
+          showAlerta(
+            'Error al cargar información de materias',
+            'error',
+            'Error de conexión'
+          )
+          setCargandoMaterias(false)
         })
     }
   }
@@ -183,38 +156,41 @@ const Matricular = () => {
   const verCambiosMatricula = () => {
     if (user && user.Id) {
       fetch(`${backendUrl}/matriculas/cambio/estudiante/${user.Id}`)
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
-            throw new Error('No se encontraron cambios para este estudiante');
+            throw new Error('No se encontraron cambios para este estudiante')
           }
-          return response.json();
+          return response.json()
         })
-        .then(data => {
-          setCambiosMatricula(data);
-          setIsModalOpen(true);
+        .then((data) => {
+          setCambiosMatricula(data)
+          setIsModalOpen(true)
         })
-        .catch(error => {
-          showAlerta(error.message, 'error', 'Error al obtener cambios');
-        });
+        .catch((error) => {
+          showAlerta(error.message, 'error', 'Error al obtener cambios')
+        })
     }
-  };
+  }
 
   // Función modificada para verificar si ya se envió un correo
   const enviarCorreo = () => {
     if (correoEnviado) {
       // Si ya se envió correo, mostrar modal de confirmación
-      setIsConfirmReenvioModalOpen(true);
+      setIsConfirmReenvioModalOpen(true)
     } else {
       // Si no se ha enviado correo, proceder con el envío directo
-      procesarEnvioCorreo();
+      procesarEnvioCorreo()
     }
   }
 
   // Nueva función para procesar el envío de correo
   const procesarEnvioCorreo = () => {
-    setEnviandoCorreo(true);
-    const userStorage = JSON.parse(localStorage.getItem('userInfo'));
-    const nombreUsuario = userStorage && userStorage.nombre ? userStorage.nombre : "Usuario no identificado";
+    setEnviandoCorreo(true)
+    const userStorage = JSON.parse(localStorage.getItem('userInfo'))
+    const nombreUsuario =
+      userStorage && userStorage.nombre
+        ? userStorage.nombre
+        : 'Usuario no identificado'
 
     fetch(`${backendUrl}/matriculas/correo/estudiante/${user.Id}`, {
       method: 'POST',
@@ -225,29 +201,39 @@ const Matricular = () => {
     })
       .then((response) => {
         if (response.ok) {
-          return response.json();
+          return response.json()
         } else {
-          throw new Error('Error al enviar el correo');
+          throw new Error('Error al enviar el correo')
         }
       })
       .then((data) => {
-        showAlerta(data.mensaje || 'Correo enviado correctamente', 'success', 'Correo enviado');
-        setCorreoEnviado(true); // Actualizar el estado para reflejar que el correo fue enviado
+        showAlerta(
+          data.mensaje || 'Correo enviado correctamente',
+          'success',
+          'Correo enviado'
+        )
+        setCorreoEnviado(true) // Actualizar el estado para reflejar que el correo fue enviado
         // Cerrar el modal de confirmación si estaba abierto
         if (isConfirmReenvioModalOpen) {
-          setIsConfirmReenvioModalOpen(false);
+          setIsConfirmReenvioModalOpen(false)
         }
       })
       .catch((error) => {
-        showAlerta(error.message, 'error', 'Error al enviar correo');
+        showAlerta(error.message, 'error', 'Error al enviar correo')
       })
       .finally(() => {
-        setEnviandoCorreo(false);
-      });
+        setEnviandoCorreo(false)
+      })
   }
 
   // Columnas diferentes para cada tabla
-  const columnasMatriculadas = ['Código', 'Nombre', 'Créditos', 'Semestre', 'Nota']
+  const columnasMatriculadas = [
+    'Código',
+    'Nombre',
+    'Créditos',
+    'Semestre',
+    'Nota'
+  ]
   const columnasNoMatriculadas = ['Código', 'Nombre', 'Créditos', 'Semestre']
   const filtros = ['Código', 'Nombre']
 
@@ -279,8 +265,11 @@ const Matricular = () => {
 
   const anularMateria = (materia) => {
     // Obtener el nombre del usuario del localStorage
-    const userStorage = JSON.parse(localStorage.getItem('userInfo'));
-    const nombreUsuario = userStorage && userStorage.nombre ? userStorage.nombre : "Usuario no identificado";
+    const userStorage = JSON.parse(localStorage.getItem('userInfo'))
+    const nombreUsuario =
+      userStorage && userStorage.nombre
+        ? userStorage.nombre
+        : 'Usuario no identificado'
 
     materiasMatriculadas.forEach((materiaMatriculada) => {
       if (materiaMatriculada.codigoMateria === materia.Código) {
@@ -295,17 +284,36 @@ const Matricular = () => {
           .then((response) => {
             if (response.ok) {
               cargarInformacion()
-              showAlerta('Matricula anulada correctamente', 'success', 'Operación exitosa')
+              showAlerta(
+                'Matricula anulada correctamente',
+                'success',
+                'Operación exitosa'
+              )
             } else {
-              response.json().then(data => {
-                showAlerta(data.mensaje || 'Error al anular la materia', 'error', 'Error en la operación')
-              }).catch(() => {
-                showAlerta('Error al anular la materia', 'error', 'Error en la operación')
-              })
+              response
+                .json()
+                .then((data) => {
+                  showAlerta(
+                    data.mensaje || 'Error al anular la materia',
+                    'error',
+                    'Error en la operación'
+                  )
+                })
+                .catch(() => {
+                  showAlerta(
+                    'Error al anular la materia',
+                    'error',
+                    'Error en la operación'
+                  )
+                })
             }
           })
-          .catch((error) => {
-            showAlerta('Error al procesar la solicitud', 'error', 'Error de conexión')
+          .catch(() => {
+            showAlerta(
+              'Error al procesar la solicitud',
+              'error',
+              'Error de conexión'
+            )
           })
       }
     })
@@ -336,7 +344,7 @@ const Matricular = () => {
           informacion={materiasPorEstado?.enCurso}
           acciones={accionesCancelar}
           elementosPorPagina={5}
-          formatearDato={formatearDatoTabla}
+          cargandoContenido={cargandoMaterias}
         />
       </div>
       <div className='flex flex-col w-full items-center space-y-6 pt-4'>
@@ -347,6 +355,7 @@ const Matricular = () => {
           acciones={accionesMatricular}
           elementosPorPagina={5}
           filtros={filtros}
+          cargandoContenido={cargandoMaterias}
         />
       </div>
       <div className='flex flex-row justify-between pt-6 w-[90%]'>
@@ -365,58 +374,78 @@ const Matricular = () => {
       <Modal
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
-        size="5xl"
-        cabecera="Cambios de Matrícula"
+        size='5xl'
+        cabecera='Cambios de Matrícula'
         cuerpo={
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className='max-h-[60vh] overflow-y-auto'>
             {cambiosMatricula.length > 0 ? (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0">
+              <table className='min-w-full divide-y divide-gray-200'>
+                <thead className='bg-gray-50 sticky top-0'>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modificado por</th>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Materia
+                    </th>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Grupo
+                    </th>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Estado
+                    </th>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Fecha
+                    </th>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Modificado por
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className='bg-white divide-y divide-gray-200'>
                   {cambiosMatricula.map((cambio) => {
                     const getEstadoColor = (estado) => {
                       switch (estado.toLowerCase()) {
                         case 'aprobada':
-                          return 'bg-blue-100 text-blue-800';
+                          return 'bg-blue-100 text-blue-800'
                         case 'en curso':
-                          return 'bg-green-100 text-green-800';
+                          return 'bg-green-100 text-green-800'
                         case 'cancelada':
-                          return 'bg-orange-100 text-orange-800';
+                          return 'bg-orange-100 text-orange-800'
                         case 'reprobada':
-                          return 'bg-red-100 text-red-800';
+                          return 'bg-red-100 text-red-800'
                         case 'anulada':
-                          return 'bg-red-100 text-red-800';
+                          return 'bg-red-100 text-red-800'
                         case 'correo enviado':
-                          return 'bg-indigo-100 text-indigo-800';
+                          return 'bg-indigo-100 text-indigo-800'
                         default:
-                          return 'bg-gray-100 text-gray-800';
+                          return 'bg-gray-100 text-gray-800'
                       }
-                    };
+                    }
 
                     return (
                       <tr key={cambio.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{cambio.materiaCodigo}</div>
-                          <div className="text-sm text-gray-500">{cambio.materiaNombre}</div>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <div className='text-sm font-medium text-gray-900'>
+                            {cambio.materiaCodigo}
+                          </div>
+                          <div className='text-sm text-gray-500'>
+                            {cambio.materiaNombre}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{cambio.grupoCodigo}</div>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <div className='text-sm text-gray-900'>
+                            {cambio.grupoCodigo}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoColor(cambio.estadoMatriculaNombre)}`}>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoColor(cambio.estadoMatriculaNombre)}`}
+                          >
                             {cambio.estadoMatriculaNombre}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(cambio.fechaCambioEstadoMatricula).toLocaleString('es-CO', {
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                          {new Date(
+                            cambio.fechaCambioEstadoMatricula
+                          ).toLocaleString('es-CO', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
@@ -425,16 +454,18 @@ const Matricular = () => {
                             hour12: true
                           })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                           {cambio.usuarioCambioEstadoMatricula}
                         </td>
                       </tr>
-                    );
+                    )
                   })}
                 </tbody>
               </table>
             ) : (
-              <p className="text-center py-4">No hay cambios de matrícula registrados.</p>
+              <p className='text-center py-4'>
+                No hay cambios de matrícula registrados.
+              </p>
             )}
           </div>
         }
@@ -444,21 +475,28 @@ const Matricular = () => {
       {/* Modal de confirmación para reenviar correo */}
       <Modal
         isOpen={isConfirmReenvioModalOpen}
-        onOpenChange={(open) => !enviandoCorreo && setIsConfirmReenvioModalOpen(open)}
-        size="md"
-        cabecera="Confirmar reenvío de reporte"
+        onOpenChange={(open) =>
+          !enviandoCorreo && setIsConfirmReenvioModalOpen(open)
+        }
+        size='md'
+        cabecera='Confirmar reenvío de reporte'
         cuerpo={
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-4 bg-red-100 p-4 rounded-full">
-              <Mail className="w-10 h-10 text-red-600" />
+          <div className='flex flex-col items-center text-center'>
+            <div className='mb-4 bg-red-100 p-4 rounded-full'>
+              <Mail className='w-10 h-10 text-red-600' />
             </div>
-            <p className="text-gray-500">Ya se ha enviado un reporte de materias para este estudiante</p>
-            <p className="text-gray-900">¿Desea volver a enviar el reporte de materias al correo del estudiante?</p>
+            <p className='text-gray-500'>
+              Ya se ha enviado un reporte de materias para este estudiante
+            </p>
+            <p className='text-gray-900'>
+              ¿Desea volver a enviar el reporte de materias al correo del
+              estudiante?
+            </p>
           </div>
         }
         footer={
           <Boton
-            color="primary"
+            color='primary'
             onClick={procesarEnvioCorreo}
             disabled={enviandoCorreo}
           >

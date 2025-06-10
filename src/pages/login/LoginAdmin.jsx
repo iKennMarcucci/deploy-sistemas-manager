@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import AlertaModal from '../../components/AlertaModal'
 import Modal from '../../components/Modal'
+import { useEffect } from 'react'
 
 const LoginAdmin = () => {
   const [email, setEmail] = useState('')
@@ -20,7 +21,7 @@ const LoginAdmin = () => {
   const Navigate = useNavigate()
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
-  // Estados para el AlertaModal 
+  // Estados para el AlertaModal
   const [alertaOpen, setAlertaOpen] = useState(false)
   const [alertaMensaje, setAlertaMensaje] = useState('')
   const [alertaTitulo, setAlertaTitulo] = useState('')
@@ -30,6 +31,12 @@ const LoginAdmin = () => {
   const [recuperarPasswordOpen, setRecuperarPasswordOpen] = useState(false)
   const [emailRecuperacion, setEmailRecuperacion] = useState('')
   const [enviandoRecuperacion, setEnviandoRecuperacion] = useState(false)
+
+  useEffect(() => {
+    localStorage.removeItem('googleToken')
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+  }, [])
 
   // Función para mostrar la alerta modal
   const mostrarAlerta = (mensaje, titulo = 'Alerta', tipo = 'error') => {
@@ -54,31 +61,41 @@ const LoginAdmin = () => {
     setEnviandoRecuperacion(true)
 
     try {
-      const response = await fetch(`${backendUrl}/auth/recuperar-password/${emailRecuperacion}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `${backendUrl}/auth/recuperar-password/${emailRecuperacion}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         }
-      })
+      )
 
       const responseData = await response.json()
 
       if (!response.ok) {
-        throw new Error(responseData.message || responseData.mensaje || 'Error al enviar la solicitud')
+        throw new Error(
+          responseData.message ||
+            responseData.mensaje ||
+            'Error al enviar la solicitud'
+        )
       }
 
       // Cerrar el modal de recuperación
       setRecuperarPasswordOpen(false)
       // Mostrar alerta de éxito
       mostrarAlerta(
-        responseData.message || 'Se le ha enviado un correo con instrucciones para restablecer su contraseña',
+        responseData.message ||
+          'Se le ha enviado un correo con instrucciones para restablecer su contraseña',
         'Recuperación de contraseña',
         'success'
       )
       // Limpiar el campo de correo
       setEmailRecuperacion('')
     } catch (error) {
-      mostrarAlertaError(error.message || 'Error al enviar la solicitud de recuperación')
+      mostrarAlertaError(
+        error.message || 'Error al enviar la solicitud de recuperación'
+      )
     } finally {
       setEnviandoRecuperacion(false)
     }
@@ -92,7 +109,7 @@ const LoginAdmin = () => {
     }
 
     try {
-      const response = await fetch(`${backendUrl}/auth/login`, {
+      const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -103,7 +120,11 @@ const LoginAdmin = () => {
       const responseData = await response.json()
 
       if (!response.ok) {
-        throw new Error(responseData.message || responseData.mensaje || 'Error al iniciar sesión')
+        throw new Error(
+          responseData.message ||
+            responseData.mensaje ||
+            'Error al iniciar sesión'
+        )
       }
 
       // Almacenar los tokens
@@ -113,23 +134,28 @@ const LoginAdmin = () => {
       // Decodificar el token para obtener información del usuario
       const decodedToken = jwtDecode(responseData.accessToken)
 
-      const primerNombre = decodedToken.primerNombre || '';
-      const segundoNombre = decodedToken.segundoNombre || '';
-      const primerApellido = decodedToken.primerApellido || '';
-      const segundoApellido = decodedToken.segundoApellido || '';
+      const primerNombre = decodedToken.primerNombre || ''
+      const segundoNombre = decodedToken.segundoNombre || ''
+      const primerApellido = decodedToken.primerApellido || ''
+      const segundoApellido = decodedToken.segundoApellido || ''
 
-      const nombreCompleto = `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`.replace(/\s+/g, ' ').trim();
+      const nombreCompleto =
+        `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`
+          .replace(/\s+/g, ' ')
+          .trim()
 
       // Guardar información del usuario en localStorage
-      localStorage.setItem('userInfo', JSON.stringify({
-        nombre: nombreCompleto,
-        rol: decodedToken.role,
-        email: decodedToken.sub
-      }))
+      localStorage.setItem(
+        'userInfo',
+        JSON.stringify({
+          nombre: nombreCompleto,
+          rol: decodedToken.role,
+          email: decodedToken.sub
+        })
+      )
 
       // En caso de éxito, navegar directamente sin mostrar alerta
       Navigate('/academico/programas')
-
     } catch (error) {
       // Mostrar el mensaje de error en el AlertaModal
       mostrarAlertaError(error.message || 'Error al iniciar sesión')
@@ -145,17 +171,18 @@ const LoginAdmin = () => {
 
   // Contenido del modal de recuperación de contraseña
   const cuerpoModalRecuperacion = (
-    <div className="flex flex-col space-y-4">
-      <p className="text-center">
-        Ingresa tu correo electrónico para recibir instrucciones sobre cómo restablecer tu contraseña.
+    <div className='flex flex-col space-y-4'>
+      <p className='text-center'>
+        Ingresa tu correo electrónico para recibir instrucciones sobre cómo
+        restablecer tu contraseña.
       </p>
       <Input
         classNames={{
           inputWrapper: 'border border-gris-institucional rounded-[15px] w-full'
         }}
         isRequired
-        placeholder="Ingrese su correo electrónico"
-        type="email"
+        placeholder='Ingrese su correo electrónico'
+        type='email'
         value={emailRecuperacion}
         onValueChange={setEmailRecuperacion}
         endContent={<Mail />}
@@ -169,7 +196,7 @@ const LoginAdmin = () => {
       onClick={enviarSolicitudRecuperacion}
       disabled={enviandoRecuperacion}
     >
-      {enviandoRecuperacion ? "Enviando..." : "Enviar"}
+      {enviandoRecuperacion ? 'Enviando...' : 'Enviar'}
     </Boton>
   )
 
@@ -223,16 +250,16 @@ const LoginAdmin = () => {
           />
 
           {/* Contenedor que agrupa el botón de inicio y el enlace de recuperación */}
-          <div className="flex flex-col items-center w-3/5 space-y-2">
+          <div className='flex flex-col items-center w-3/5 space-y-2'>
             <Boton type='submit' w='100%' disabled={loading}>
               {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </Boton>
 
             {/* Enlace para recuperar contraseña */}
             <button
-              type="button"
+              type='button'
               onClick={() => setRecuperarPasswordOpen(true)}
-              className="text-rojo-institucional hover:underline text-sm mt-1"
+              className='text-rojo-institucional hover:underline text-sm mt-1'
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -253,10 +280,10 @@ const LoginAdmin = () => {
       <Modal
         isOpen={recuperarPasswordOpen}
         onOpenChange={() => setRecuperarPasswordOpen(!recuperarPasswordOpen)}
-        cabecera="Recuperar Contraseña"
+        cabecera='Recuperar Contraseña'
         cuerpo={cuerpoModalRecuperacion}
         footer={footerModalRecuperacion}
-        size="md"
+        size='md'
       />
     </div>
   )

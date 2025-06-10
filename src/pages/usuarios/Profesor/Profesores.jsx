@@ -7,10 +7,12 @@ import { Eye, Pencil } from 'lucide-react'
 const Profesores = () => {
   const [profesores, setProfesores] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoProfesores, setCargandoProfesores] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
   const Navigate = useNavigate()
 
   useEffect(() => {
+    setCargandoProfesores(true)
     fetch(`${backendUrl}/usuarios/rol/2`)
       .then((response) => response.json())
       .then((data) => {
@@ -40,6 +42,7 @@ const Profesores = () => {
 
       setInformacion(profesoresConDatos)
     }
+    setCargandoProfesores(false)
   }, [profesores])
 
   const verProfesor = (profesor) => {
@@ -71,18 +74,18 @@ const Profesores = () => {
 
   return (
     <div className='p-4 w-full flex flex-col items-center justify-center'>
-      <p className='text-center text-titulos'>Lista de profesores</p>
+      <div className='w-full flex items-center justify-between mb-8'>
+        <p className='text-center text-titulos flex-1'>Lista de profesores</p>
+        <Boton onClick={handleRegistrar}>Crear profesor</Boton>
+      </div>
       <div className='w-full my-8'>
         <Tabla
           informacion={informacion}
           columnas={columnas}
           filtros={filtros}
           acciones={acciones}
+          cargandoContenido={cargandoProfesores}
         />
-      </div>
-
-      <div className='w-full flex justify-end mt-4'>
-        <Boton onClick={handleRegistrar}>Crear profesor</Boton>
       </div>
     </div>
   )

@@ -7,7 +7,7 @@ import { useAuth } from '../lib/hooks/useAuth'
 const Topbar = () => {
   const Navigate = useNavigate()
   const { authType, logout, userLoggedSetter } = useAuth()
-
+  
   const [nombre, setNombre] = useState('')
   const [fotoUrl, setFotoUrl] = useState('')
 
@@ -18,7 +18,7 @@ const Topbar = () => {
       const googleUser = localStorage.getItem('googleToken')
       // Verificar si existe un usuario administrador
       const adminUser = localStorage.getItem('userInfo')
-
+      
       if (googleUser) {
         const user = userLoggedSetter(googleUser)
         setNombre(user.firstName + " " + user.lastName || '')
@@ -33,14 +33,14 @@ const Topbar = () => {
         setFotoUrl('')
       }
     }
-
+    
     getUserInfo()
-
+    
     // Configurar un listener para actualizar si cambia el almacenamiento local
     const handleStorageChange = () => {
       getUserInfo()
     }
-
+    
     window.addEventListener('storage', handleStorageChange)
     return () => {
       window.removeEventListener('storage', handleStorageChange)

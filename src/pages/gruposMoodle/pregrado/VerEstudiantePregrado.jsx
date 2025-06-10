@@ -3,55 +3,86 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Input, Divider } from '@heroui/react'
 import Tabla from '../../../components/Tabla'
-import { useParams } from 'react-router-dom'
 
-const VerEstudiantePosgrado = () => {
-  const { id } = useParams()
+const VerEstudiantePregrado = () => {
+  const [ruta, setRuta] = useState('')
   const [usuario, setUsuario] = useState({})
-  const [grupos, setGrupos] = useState([])
+  const [matriculas, setMatriculas] = useState([])
+  const [materias, setMaterias] = useState([])
   const [informacion, setInformacion] = useState([])
   const [cargandoEstudiante, setCargandoEstudiante] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
-    if (id) {
-      setCargandoEstudiante(true)
-      fetch(`${backendUrl}/estudiantes/${id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          setUsuario({
-            primerNombre: data.nombre,
-            segundoNombre: data.nombre2,
-            primerApellido: data.apellido,
-            segundoApellido: data.apellido2,
-            email: data.email,
-            codigo: data.codigo
-          })
-        })
-
-      fetch(`${backendUrl}/matriculas/estudiante/${id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          setGrupos(data)
-        })
-    }
-  }, [id])
+    setRuta(localStorage.getItem('ruta'))
+  }, [])
 
   useEffect(() => {
-    if (grupos.length > 0) {
-      const gruposConMatricula = grupos.map((grupo) => ({
-        ...grupo,
-        Código: grupo.codigoMateria,
-        Grupo: grupo.grupoNombre.charAt(grupo.grupoNombre.length - 1),
-        Materia: grupo.nombreMateria,
-        Semestre: grupo.semestreMateria
-      }))
-      setInformacion(gruposConMatricula)
+    setUsuario(JSON.parse(localStorage.getItem('usuario')))
+  }, [ruta])
+
+  //--------Datos divisist---------//
+
+  useEffect(() => {
+    if (ruta === 'grupos') {
+      if (usuario.codigo !== '') {
+        setCargandoEstudiante(true)
+        fetch(
+          `${backendUrl}/api/oracle/materias-matriculadas/alumno-carrera?codCarrera=${usuario.codigo.slice(0, 3)}&codAlumno=${usuario.codigo.slice(3)}`
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            setMatriculas(data)
+          })
+          .catch((error) => {
+            console.error('Error fetching materias:', error)
+          })
+      }
+
+      fetch(`${backendUrl}/api/oracle/materias/tecnologia`)
+        .then((response) => response.json())
+        .then((data) => {
+          setMaterias(data)
+        })
+        .catch((error) => {
+          console.error('Error fetching materias:', error)
+        })
+    }
+  }, [usuario])
+
+  useEffect(() => {
+    if (matriculas.length > 0 && materias.length > 0) {
+      const materiasConMatricula = materias
+        .filter((materia) =>
+          matriculas.some(
+            (matricula) =>
+              materia.codCarrera + materia.codMateria ===
+              matricula.codCarMat + matricula.codMatMat
+          )
+        )
+        .map((materia) => {
+          // Buscar la matrícula que hizo match
+          const matriculaMatch = matriculas.find(
+            (matricula) =>
+              materia.codCarrera + materia.codMateria ===
+              matricula.codCarMat + matricula.codMatMat
+          )
+
+          return {
+            ...materia,
+            Nombre: materia.nombre,
+            Código: materia.codCarrera + materia.codMateria,
+            Grupo: matriculaMatch?.grupo || 'N/A',
+            Semestre: materia.semestre
+          }
+        })
+
+      setInformacion(materiasConMatricula)
       setCargandoEstudiante(false)
     }
-  }, [grupos])
+  }, [materias, matriculas])
 
-  const columnas = ['Código', 'Materia', 'Grupo', 'Semestre']
+  const columnas = ['Código', 'Grupo', 'Nombre', 'Semestre']
 
   const capitalizar = (texto) => {
     if (!texto || typeof texto !== 'string') return ''
@@ -196,4 +227,4 @@ const VerEstudiantePosgrado = () => {
   )
 }
 
-export default VerEstudiantePosgrado
+export default VerEstudiantePregrado

@@ -10,6 +10,7 @@ const VerUsario = () => {
   const [matriculas, setMatriculas] = useState([])
   const [materias, setMaterias] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoUsuario, setCargandoUsuario] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
@@ -20,47 +21,12 @@ const VerUsario = () => {
     setUsuario(JSON.parse(localStorage.getItem('usuario')))
   }, [ruta])
 
-  //---------Datos quemados---------//
-  /*
-
-  useEffect(() => {
-    if (ruta === 'grupos') {
-      fetch(`/divisist/materiasMatriculadas.json`)
-        .then((response) => response.json())
-        .then((data) => {
-          const materiasFiltradas = data.results[0].items.filter(
-            (materia) =>
-              materia.cod_carrera + materia.cod_alumno === usuario.codigo
-          )
-          setMatriculas(materiasFiltradas)
-          console.log(materiasFiltradas)
-        })
-        .catch((error) => {
-          console.error('Error fetching materias:', error)
-        })
-
-      fetch('/divisist/materias.json')
-        .then((response) => response.json())
-        .then((data) => {
-          const materiasFiltradas = data.results[0].items.filter(
-            (materia) => materia.cod_carrera === '115'
-          )
-          setMaterias(materiasFiltradas)
-          console.log(materiasFiltradas)
-        })
-        .catch((error) => {
-          console.error('Error fetching materias:', error)
-        })
-    }
-  }, [usuario])
-
-  */
-
   //--------Datos divisist---------//
 
   useEffect(() => {
     if (ruta === 'grupos') {
       if (usuario.codigo !== '') {
+        setCargandoUsuario(true)
         fetch(
           `${backendUrl}/api/oracle/materias-matriculadas/alumno-carrera?codCarrera=${usuario.codigo.slice(0, 3)}&codAlumno=${usuario.codigo.slice(3)}`
         )
@@ -112,6 +78,7 @@ const VerUsario = () => {
         })
 
       setInformacion(materiasConMatricula)
+      setCargandoUsuario(false)
     }
   }, [materias, matriculas])
 
@@ -250,7 +217,11 @@ const VerUsario = () => {
 
       <div className='w-[90%] flex flex-col items-center justify-center mb-8  '>
         <p className='text-subtitulos mb-4'>Materias matriculadas</p>
-        <Tabla informacion={informacion} columnas={columnas} />
+        <Tabla
+          informacion={informacion}
+          columnas={columnas}
+          cargandoContenido={cargandoUsuario}
+        />
       </div>
     </div>
   )

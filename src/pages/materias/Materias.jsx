@@ -10,6 +10,7 @@ const Materias = () => {
   const [materias, setMaterias] = useState([])
   const [pensums, setPensums] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoMaterias, setCargandoMaterias] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
   const moodleUrl = import.meta.env.VITE_MOODLE_URL
   const moodleToken = import.meta.env.VITE_MOODLE_TOKEN
@@ -83,6 +84,7 @@ const Materias = () => {
   }, [])
 
   const cargarDatos = async () => {
+    setCargandoMaterias(true)
     try {
       // Cargar materias
       const materiasResponse = await fetch(`${backendUrl}/materias/listar`)
@@ -95,6 +97,8 @@ const Materias = () => {
       setPensums(pensumsData)
     } catch (error) {
       console.error('Error al cargar datos:', error)
+    } finally {
+      setCargandoMaterias(false)
     }
   }
 
@@ -120,7 +124,6 @@ const Materias = () => {
 
   // Preparar la edición de una materia
   const prepararEdicion = (materia) => {
-    console.log('Materia a editar:', materia) // Log para depuración
     setCodigo(materia.Código)
     setNombre(materia.Nombre)
     setCreditos(materia.Créditos?.toString() || '')
@@ -133,17 +136,14 @@ const Materias = () => {
     // Obtener el moodleId directamente o a través de una llamada API si no está disponible
     if (materia.moodleId !== undefined) {
       setMoodleId(materia.moodleId.toString())
-      console.log('moodleId establecido:', materia.moodleId)
     } else {
       // Si no está disponible en el objeto, lo obtenemos del API
       obtenerMoodleIdMateria(materia.id)
         .then((moodleId) => {
           if (moodleId) {
             setMoodleId(moodleId.toString())
-            console.log('moodleId obtenido de API:', moodleId)
           } else {
             setMoodleId('')
-            console.log('No se encontró moodleId')
           }
         })
         .catch((error) => {
@@ -209,11 +209,6 @@ const Materias = () => {
           materiaId,
           moodleId
         })
-        // En lugar de lanzar un error, imprimimos un mensaje más detallado para depurar
-        console.log('Tipo de materiaId:', typeof materiaId)
-        console.log('Valor de materiaId:', materiaId)
-        console.log('Tipo de moodleId:', typeof moodleId)
-        console.log('Valor de moodleId:', moodleId)
         throw new Error(
           `Faltan parámetros obligatorios: materiaId=${materiaId}, moodleId=${moodleId}`
         )
@@ -224,11 +219,6 @@ const Materias = () => {
         backendId: materiaId,
         moodleId: moodleId.toString()
       }
-
-      console.log(
-        'Enviando solicitud para actualizar moodleId con:',
-        requestBody
-      )
 
       const response = await fetch(`${backendUrl}/materias/moodle`, {
         method: 'POST',
@@ -247,7 +237,6 @@ const Materias = () => {
       }
 
       const result = await response.json()
-      console.log('Respuesta exitosa al actualizar moodleId:', result)
       return result
     } catch (error) {
       console.error('Error actualizando moodleId:', error)
@@ -285,13 +274,6 @@ const Materias = () => {
       if (!response.ok) {
         throw new Error('Error al actualizar categoría en Moodle')
       }
-
-      // En lugar de hacer la llamada, hacemos un console.log con los parámetros
-      // console.log('Datos para actualizar categoría en Moodle:')
-      // console.log('moodleId (ID de la materia en Moodle):', moodleId)
-      // console.log('nombre:', nombre)
-      // console.log('parentId (moodleId del semestre):', parentId)
-      // console.log('codigo:', codigo)
 
       // Simulamos una respuesta exitosa
       // return true
@@ -332,13 +314,8 @@ const Materias = () => {
       }
 
       const materiaCreada = await response.json()
-      console.log('Materia creada exitosamente:', materiaCreada)
 
       // Verificar que materiaCreada tenga un ID y mostrar su estructura
-      console.log(
-        'Estructura completa de materiaCreada:',
-        JSON.stringify(materiaCreada)
-      )
       const backendId =
         materiaCreada.id || materiaCreada.backendId || materiaCreada._id
 
@@ -351,8 +328,6 @@ const Materias = () => {
           'La respuesta del servidor no incluyó un ID válido para la materia'
         )
       }
-
-      console.log('ID de materia a usar:', backendId)
 
       try {
         // 2. Obtener el programa asociado al pensum
@@ -391,14 +366,8 @@ const Materias = () => {
           codigo
         )
 
-        console.log('Categoría creada en Moodle con ID:', moodleId)
-        console.log('ID de la materia en el backend:', backendId)
-
         // 6. Actualizar el moodleId de la materia en el backend usando el ID correcto
         await actualizarMoodleIdMateria(backendId, moodleId)
-        console.log(
-          `Materia "${nombre}" asociada con éxito a Moodle ID: ${moodleId}`
-        )
       } catch (moodleError) {
         console.error('Error en el proceso de Moodle:', moodleError)
         // No interrumpimos el flujo, solo registramos el error
@@ -435,9 +404,6 @@ const Materias = () => {
     if (moodleId) {
       data.moodleId = moodleId
     }
-
-    console.log('Data a enviar:', data)
-    console.log('moodleId actual:', moodleId)
 
     try {
       // 1. Actualizar la materia en el backend
@@ -501,10 +467,6 @@ const Materias = () => {
             nombre,
             semestreSeleccionado.moodleId,
             codigo
-          )
-
-          console.log(
-            `Materia "${nombre}" actualizada en Moodle con ID: ${materiaMoodleId}`
           )
         }
       } catch (moodleError) {
@@ -590,18 +552,8 @@ const Materias = () => {
 
   return (
     <div className='flex flex-col items-center justify-center p-4 w-full'>
-      <p className='text-titulos'>Lista de materias</p>
-      <div className='w-full my-8'>
-        <Tabla
-          columnas={columnas}
-          informacion={informacion}
-          acciones={acciones}
-          filtros={filtros}
-          elementosPorPagina={10}
-        />
-      </div>
-
-      <div className='w-full flex justify-end mt-4'>
+      <div className='w-full flex items-center justify-between mb-8'>
+        <p className='text-center text-titulos flex-1'>Lista de materias</p>
         <Boton
           onClick={() => {
             limpiarFormulario()
@@ -610,6 +562,16 @@ const Materias = () => {
         >
           Crear materia
         </Boton>
+      </div>
+      <div className='w-full my-8'>
+        <Tabla
+          columnas={columnas}
+          informacion={informacion}
+          acciones={acciones}
+          filtros={filtros}
+          elementosPorPagina={10}
+          cargandoContenido={cargandoMaterias}
+        />
       </div>
 
       {/* Modal para crear/editar materia */}

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { listarGrupos, listarProyectos, importarProyecto, importarDocumentos, actualizarProgreso, crearSustentacion, evaluarSustentacion, listarDocentes, setJurados, setDirectores, eliminarProyecto } from "../controllers/admin/actions"
+import { listarGrupos, listarProyectos, crearGrupo, importarProyecto, importarDocumentos, actualizarProgreso, crearSustentacion, evaluarSustentacion, listarDocentes, setJurados, setDirectores, eliminarProyecto, editarGrupo, eliminarGrupo, listarProgramas, eliminarLinea, editarLinea, crearLinea } from "../controllers/admin/actions"
 
 export default function useAdmin() {
    const [error, setError] = useState(null)
@@ -144,5 +144,99 @@ export default function useAdmin() {
          console.log(error)
       }
    }
-   return { obtenerProyectos, deleteProject, importProyecto, importDocumentos, obtenerGrupos, actualizarFase, createSustentacion, obtenerDocentes, asignarJurados, asignarDirectores, guardarComentariosJurados }
+
+   const createGrupo = async (body) => {
+      try {
+         let token = accessToken
+         if (!accessToken) token = googleToken
+         const data = await crearGrupo({ body: body, accessToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         console.log(error)
+      }
+   }
+
+   const editGrupo = async (body, id) => {
+      try {
+         let token = accessToken
+         if (!accessToken) token = googleToken
+         const data = await editarGrupo({ body: body, id: id, accessToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         console.log(error)
+      }
+   }
+
+
+   const deleteGrupo = async (id) => {
+      try {
+         let token = accessToken
+         if (!accessToken) token = googleToken
+         const data = await eliminarGrupo({ id: id, accessToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         console.log(error)
+      }
+   }
+
+      const createLinea = async (body) => {
+      try {
+         let token = accessToken
+         if (!accessToken) token = googleToken
+         const data = await crearLinea({ body: body, accessToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         console.log(error)
+      }
+   }
+
+   const editLinea = async (body, id) => {
+      try {
+         let token = accessToken
+         if (!accessToken) token = googleToken
+         const data = await editarLinea({ body: body, id: id, accessToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         console.log(error)
+      }
+   }
+
+
+   const deleteLinea = async (id) => {
+      try {
+         let token = accessToken
+         if (!accessToken) token = googleToken
+         const data = await eliminarLinea({ id: id, accessToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         console.log(error)
+      }
+   }
+
+
+   const listProgramas = async (body) => {
+      try {
+         let token = accessToken
+         if (!accessToken) token = googleToken
+         const data = await listarProgramas({ body: body, accessToken: token })
+         return data
+      } catch (error) {
+         setIsError(true)
+         setError(error)
+         console.log(error)
+      }
+   }
+   return { obtenerProyectos, listProgramas, deleteGrupo, editGrupo, createLinea, editLinea, deleteLinea, deleteProject, createGrupo, importProyecto, importDocumentos, obtenerGrupos, actualizarFase, createSustentacion, obtenerDocentes, asignarJurados, asignarDirectores, guardarComentariosJurados }
 }

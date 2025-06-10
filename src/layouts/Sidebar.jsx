@@ -61,7 +61,7 @@ const Sidebar = () => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      fetch(`${backendUrl}/programas/listar`)
+      fetch(`${backendUrl}/api/programas/listar`)
         .then((response) => response.json())
         .then((data) => {
           const programasFiltrados = data.filter(
@@ -143,10 +143,16 @@ const Sidebar = () => {
               funcion={() => toggleMenu(2)}
               icono={<BookPlus className='text-[25px]' />}
               opciones={[
-                { label: 'Cancelación', href: '/cancelaciones' },
-                { label: 'Aplazamiento de semestre', href: '/aplazamiento' },
-                { label: 'Reintegro', href: '/reintegros' },
-                { label: 'Contraprestaciones', href: '/contraprestaciones' },
+                { label: 'Cancelación', href: '/matricula/cancelaciones' },
+                {
+                  label: 'Aplazamiento de semestre',
+                  href: '/matricula/aplazamiento'
+                },
+                { label: 'Reintegro', href: '/matricula/reintegros' },
+                {
+                  label: 'Contraprestaciones',
+                  href: '/matricula/contraprestaciones'
+                },
                 { label: 'Inclusión de materias', href: '/matricula/inclusion' }
               ]}
               openMenu={selectedMenu === 2}
@@ -161,8 +167,8 @@ const Sidebar = () => {
               funcion={() => toggleMenu(3)}
               icono={<PiStudent className='text-[25px]' />}
               opciones={[
-                { label: 'Profesores', href: '/profesores' },
-                { label: 'Estudiantes', href: '/estudiantes' }
+                { label: 'Profesores', href: '/usuarios/profesores' },
+                { label: 'Estudiantes', href: '/usuarios/estudiantes' }
               ]}
               openMenu={selectedMenu === 3}
               selectedOption={selectedOption}
@@ -180,9 +186,9 @@ const Sidebar = () => {
                   label: 'Pregrado',
                   subopciones: [
                     {
-                      label: 'Ingeniería de sistemas',
+                      label: 'Tecnología en analítica de datos',
                       href: '/pregrado/grupos',
-                      codigo: '115'
+                      codigo: '215'
                     }
                   ]
                 },
@@ -203,8 +209,8 @@ const Sidebar = () => {
               funcion={() => toggleMenu(5)}
               icono={<PiProjectorScreenChart className='text-[25px]' />}
               opciones={[
-                { label: 'Proyectos', href: '/proyectos-admin' }, //? Cambiar de Fase, Asignar Director y Codirector, Subir nota de jurados en FASE 9 
-                { label: 'Sustentaciones', href: '/sustentaciones-admin' }, //? Asignar sustentaciones a cada proyecto (luego de eso cambiar automaticamente de fase) 
+                { label: 'Proyectos', href: '/proyectos-admin' }, //? Cambiar de Fase, Asignar Director y Codirector, Subir nota de jurados en FASE 9
+                { label: 'Grupos Investigación', href: '/grupos-admin' } //? Asignar sustentaciones a cada proyecto (luego de eso cambiar automaticamente de fase)
               ]}
               openMenu={selectedMenu === 5}
               selectedOption={selectedOption}
@@ -218,9 +224,9 @@ const Sidebar = () => {
               funcion={() => toggleMenu(6)}
               icono={<UserRoundCog className='text-[25px]' />}
               opciones={[
-                { label: 'Administradores', href: '/admin' },
-                { label: 'Crear administrador', href: '/crear-admin' },
-                { label: 'Terminar semestre', href: '/terminar-semestre' }
+                { label: 'Administradores', href: '/admin/admins' },
+                { label: 'Crear administrador', href: '/admin/crear-admin' },
+                { label: 'Terminar semestre', href: '/admin/terminar-semestre' }
               ]}
               openMenu={selectedMenu === 6}
               selectedOption={selectedOption}

@@ -6,18 +6,21 @@ import { useNavigate } from 'react-router-dom'
 const Inclusion = () => {
   const [estudiantes, setEstudiantes] = useState([])
   const [transformedEstudiantes, setTransformedEstudiantes] = useState([])
+  const [cargandoEstudiantes, setCargandoEstudiantes] = useState(true)
   const Navigate = useNavigate()
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   const obtenerEstudiantes = async () => {
+    setCargandoEstudiantes(true)
     try {
       const response = await fetch(`${backendUrl}/estudiantes/listar/estado/1`)
       const data = await response.json()
       setEstudiantes(data)
-      console.log(data)
     } catch (error) {
       console.error('Error fetching estudiantes:', error)
+    } finally {
+      setCargandoEstudiantes(false)
     }
   }
 
@@ -88,6 +91,7 @@ const Inclusion = () => {
           columnas={columnas}
           acciones={acciones}
           filtros={filtros}
+          cargandoContenido={cargandoEstudiantes}
         />
       </div>
     </div>

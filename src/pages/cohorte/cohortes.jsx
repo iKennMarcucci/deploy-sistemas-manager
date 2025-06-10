@@ -23,6 +23,8 @@ const Cohortes = () => {
   const [alertaType, setAlertaType] = useState('success')
   const [alertaTitulo, setAlertaTitulo] = useState('')
 
+  const [cargandoCohortes, setCargandoCohortes] = useState(true)
+
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   // Función para mostrar alerta
@@ -41,6 +43,7 @@ const Cohortes = () => {
   }, [])
 
   const fetchCohortes = () => {
+    setCargandoCohortes(true)
     fetch(`${backendUrl}/cohortes/listar`)
       .then((response) => response.json())
       .then((data) => {
@@ -60,6 +63,9 @@ const Cohortes = () => {
           'error',
           'Error de conexión'
         )
+      })
+      .finally(() => {
+        setCargandoCohortes(false)
       })
   }
 
@@ -195,7 +201,12 @@ const Cohortes = () => {
 
   return (
     <div className='w-full p-4'>
-      <p className='text-center text-titulos'>Lista de Cohortes</p>
+      <div className='w-full flex items-center justify-between mb-8'>
+        <p className='text-center text-titulos flex-1'>Lista de Cohortes</p>
+        <Boton onClick={() => setIsCreateModalOpen(true)} color='danger'>
+          Crear cohorte
+        </Boton>
+      </div>
 
       {/* Tabla principal */}
       <Tabla
@@ -204,14 +215,8 @@ const Cohortes = () => {
         filtros={filtros}
         acciones={acciones}
         elementosPorPagina={10}
+        cargandoContenido={cargandoCohortes}
       />
-
-      {/* Botón para crear nueva cohorte */}
-      <div className='mt-12 flex justify-end'>
-        <Boton onClick={() => setIsCreateModalOpen(true)} color='danger'>
-          Crear cohorte
-        </Boton>
-      </div>
 
       {/* Modal para ver detalles */}
       <Modal
@@ -276,7 +281,7 @@ const Cohortes = () => {
                           inputWrapper:
                             'border border-gris-institucional rounded-[15px] w-full max-h-[40px]'
                         }}
-                        label={`Grupo A (ID: ${cohorteDetails.cohortesGrupos[0]?.id || '-'})`}
+                        label={`Grupo A`}
                         labelPlacement='outside'
                         name='grupoA'
                         type='text'
@@ -297,7 +302,7 @@ const Cohortes = () => {
                             inputWrapper:
                               'border border-gris-institucional rounded-[15px] w-full max-h-[40px]'
                           }}
-                          label={`Grupo B (ID: ${cohorteDetails.cohortesGrupos[1]?.id || '-'})`}
+                          label={`Grupo B`}
                           labelPlacement='outside'
                           name='grupoB'
                           type='text'
@@ -345,7 +350,7 @@ const Cohortes = () => {
         cuerpo={
           <form className='space-y-4'>
             <Input
-              label='Nombre de la cohorte'
+              label='Nombre del cohorte'
               value={editFormData.nombre}
               onChange={(e) =>
                 setEditFormData({ ...editFormData, nombre: e.target.value })
@@ -366,12 +371,12 @@ const Cohortes = () => {
       <Modal
         isOpen={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
-        cabecera='Crear nueva cohorte'
+        cabecera='Crear nuevo cohorte'
         size='md'
         cuerpo={
           <form className='space-y-4'>
             <Input
-              label='Nombre de la cohorte'
+              label='Nombre del cohorte'
               value={createFormData.nombre}
               onChange={(e) =>
                 setCreateFormData({ ...createFormData, nombre: e.target.value })

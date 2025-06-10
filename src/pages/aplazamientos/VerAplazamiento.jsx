@@ -10,12 +10,7 @@ import {
 } from "lucide-react";
 import {
     Input,
-    Divider,
-    Textarea,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter
+    Divider
 } from "@heroui/react";
 import Boton from "../../components/Boton";
 import Modal from "../../components/Modal";
@@ -128,11 +123,12 @@ const VerAplazamiento = () => {
         formData.append('informe', selectedFile);
         const userStorage = JSON.parse(localStorage.getItem('userInfo'));
         const nombreUsuario = userStorage && userStorage.nombre ? userStorage.nombre : "Usuario no identificado";
+
         try {
             const response = await fetch(`${backendUrl}/aplazamiento/aprobar/${id}`, {
                 method: 'POST',
                 body: formData,
-                headers:{
+                headers: {
                     'X-Usuario': nombreUsuario,
                 }
             });
@@ -224,11 +220,7 @@ const VerAplazamiento = () => {
 
     const previewSelectedFile = () => {
         if (!selectedFile) return;
-
-        // Crear un objeto URL para el archivo seleccionado
         const fileUrl = URL.createObjectURL(selectedFile);
-
-        // Abrir en una nueva ventana
         window.open(fileUrl, '_blank');
     };
 
@@ -417,7 +409,7 @@ const VerAplazamiento = () => {
                             ¿Está seguro que desea aprobar la solicitud de aplazamiento de semestre para el estudiante {solicitud.estudianteNombre}?
                         </p>
                         <p className="mt-2 mb-1">
-                            Esta acción aprobará el aplazamiento del semestre {solicitud.semestre}, le desmatriculará todas las materias que tiene en curso y cambiará el estado del estudiante a "Inactivo".
+                            Esta acción aprobará el aplazamiento del semestre {solicitud.semestre}, le desmatriculará todas las materias que tiene en curso y cambiará el estado del estudiante a Inactivo.
                         </p>
 
                         <p className="text-normal mt-6 mb-2">Documento de Soporte (PDF o DOCX)</p>

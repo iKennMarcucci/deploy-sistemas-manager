@@ -111,10 +111,6 @@ const TerminarSemestre = () => {
             continue
           }
 
-          console.log('id programa:', programa.id)
-          console.log('semestre actual:', programa.semestreActual)
-          console.log('usuario:', nombreUsuario)
-
           // Realizar la petición al backend para terminar el semestre de este programa
           const response = await fetch(
             `${backendUrl}/semestres/terminar/${programa.id}/${programa.semestreActual}`,

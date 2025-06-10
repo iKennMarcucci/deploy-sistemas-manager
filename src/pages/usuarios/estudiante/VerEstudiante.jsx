@@ -17,9 +17,7 @@ const VerEstudiante = () => {
       .catch((error) => console.error('Error fetching data:', error))
   }, [])
 
-  useEffect(() => {
-    console.log(estudiante)
-  }, [estudiante])
+  useEffect(() => {}, [estudiante])
 
   const formatFecha = (fecha) => {
     if (!fecha) return '' // Manejar fechas nulas o indefinidas

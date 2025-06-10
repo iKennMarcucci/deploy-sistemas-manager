@@ -6,6 +6,7 @@ import AlertaModal from '../../components/AlertaModal'
 
 const Admins = () => {
   const [admins, setAdmins] = useState([])
+  const [cargandoAdmins, setCargandoAdmins] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
   const [datos, setDatos] = useState([])
   // Estados para el modal de alerta
@@ -24,6 +25,7 @@ const Admins = () => {
   // Cargar administradores
   useEffect(() => {
     const fetchAdmins = async () => {
+      setCargandoAdmins(true)
       try {
         const accessToken = localStorage.getItem('accessToken')
         const response = await fetch(`${backendUrl}/auth/admins`, {
@@ -46,6 +48,8 @@ const Admins = () => {
           error.message || 'Error al cargar los administradores',
           'error'
         )
+      } finally {
+        setCargandoAdmins(false)
       }
     }
 
@@ -124,6 +128,7 @@ const Admins = () => {
             {admin.activo ? (
               <Tooltip content='Desactivar'>
                 <Button
+                  isDisabled={admin.esSuperAdmin} // No permitir desactivar superadmin
                   isIconOnly
                   color='danger'
                   className='bg-rojo-institucional text-white hover:bg-rojo-mate'
@@ -167,7 +172,11 @@ const Admins = () => {
     <div className='flex flex-col items-center w-full p-4'>
       <p className='text-titulos my-4'>Lista de administradores</p>
       <div className='w-full my-8'>
-        <Tabla informacion={datos} columnas={columnas} />
+        <Tabla
+          informacion={datos}
+          columnas={columnas}
+          cargandoContenido={cargandoAdmins}
+        />
       </div>
 
       <AlertaModal

@@ -212,9 +212,7 @@ const EditarProfesor = () => {
         `&users[0][lastname]=${[primerApellido, segundoApellido].filter(Boolean).join(' ')}` +
         `&users[0][email]=${correo}`
     ).then((response) => {
-      if (response.ok) {
-        console.log('Estudiante actualizado en Moodle')
-      } else {
+      if (!response.ok) {
         console.error('Error al actualizar el estudiante en Moodle')
       }
     })
@@ -232,7 +230,6 @@ const EditarProfesor = () => {
       codigo,
       moodleId: profesor.moodleId
     }
-    console.log(data)
     try {
       const response = await fetch(`${backendUrl}/usuarios/profesores/${id}`, {
         method: 'PUT',
@@ -262,7 +259,6 @@ const EditarProfesor = () => {
         setIsAlertOpen(true)
       }
     } catch (error) {
-      console.log(error)
       setAlertType('error')
       setAlertMessage('Error al actualizar el profesor')
       setIsAlertOpen(true)

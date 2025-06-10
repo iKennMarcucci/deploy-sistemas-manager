@@ -7,11 +7,10 @@ import Modales from './pages/pruebaComponente/Modales'
 import LoginAdmin from './pages/login/LoginAdmin'
 import GruposPregrado from './pages/gruposMoodle/pregrado/GruposPregrado'
 import Layout from './layouts/Layout'
-import VerGrupo from './pages/gruposMoodle/pregrado/VerGrupo'
+import VerGrupoPregrado from './pages/gruposMoodle/pregrado/VerGrupoPregrado'
 import CrearUsuario from './pages/usuarios/CrearUsuario'
 import Login from './pages/login/Login'
 import Notas from './pages/notas/Notas'
-import VerUsuario from './pages/usuarios/VerUsuario'
 import EstadoProyecto from './pages/estado-proyecto/EstadoProyecto'
 import Seguimiento from './pages/seguimiento/Seguimiento'
 import Admins from './pages/administrador/Admins'
@@ -55,10 +54,11 @@ import NotasPosgrado from './pages/notas/NotasPosgrado'
 import CambiarContrasena from './pages/login/CambiarContrasena'
 import Success from './pages/login/Success'
 import ListadoInformes from './pages/listadoInformes/ListadoInformes'
-import AdminProyectos from './pages/admin/proyectos/AdminProyectos'
-import AdminSustentaciones from './pages/admin/sustentaciones/AdminSustentaciones'
-import ListadoSustentaciones from './pages/listadoSustentaciones/ListadoSustentaciones'
 import ListadoGruposDocente from './pages/listadoInformes/ListadosGruposDocente'
+import ListadoSustentaciones from './pages/listadoSustentaciones/ListadoSustentaciones'
+import AdminProyectos from './pages/admin/proyectos/AdminProyectos'
+import AdminGrupos from './pages/admin/sustentaciones/AdminGrupos'
+import VerEstudiantePregrado from './pages/gruposMoodle/pregrado/VerEstudiantePregrado'
 
 function App() {
   return (
@@ -81,31 +81,31 @@ function App() {
           <Route element={<Layout />}>
             {/* Profesores */}
             <Route
-              path='/profesores/crear-profesor'
+              path='/usuarios/profesores/crear-profesor'
               element={<CrearProfesor />}
             />
-            <Route path='/profesores' element={<Profesores />} />
+            <Route path='/usuarios/profesores' element={<Profesores />} />
             <Route
-              path='/profesores/ver-profesor/:id'
+              path='/usuarios/profesores/ver-profesor/:id'
               element={<VerProfesor />}
             />
             <Route
-              path='/profesores/editar-profesor/:id'
+              path='/usuarios/profesores/editar-profesor/:id'
               element={<EditarProfesor />}
             />
 
             {/* Estudiantes */}
-            <Route path='/estudiantes' element={<Estudiantes />} />
+            <Route path='/usuarios/estudiantes' element={<Estudiantes />} />
             <Route
-              path='/estudiantes/crear-estudiante'
+              path='/usuarios/estudiantes/crear-estudiante'
               element={<CrearEstudiante />}
             />
             <Route
-              path='/estudiantes/ver-estudiante/:id'
+              path='/usuarios/estudiantes/ver-estudiante/:id'
               element={<VerEstudiante />}
             />
             <Route
-              path='/estudiantes/editar-estudiante/:id'
+              path='/usuarios/estudiantes/editar-estudiante/:id'
               element={<EditarEstudiante />}
             />
 
@@ -121,29 +121,41 @@ function App() {
 
             {/* Contraprestacion */}
             <Route
-              path='/contraprestaciones'
+              path='/matricula/contraprestaciones'
               element={<Contraprestaciones />}
             />
             <Route
-              path='/contraprestaciones/:id'
+              path='/matricula/contraprestaciones/:id'
               element={<VerContraprestacion />}
             />
             <Route
-              path='/contraprestaciones/crear'
+              path='/matricula/contraprestaciones/crear'
               element={<CrearContraprestacion />}
             />
             <Route
-              path='/contraprestaciones/editar/:id'
+              path='/matricula/contraprestaciones/editar/:id'
               element={<EditarContraprestacion />}
             />
 
             {/* Solicitudes*/}
-            <Route path='/aplazamiento' element={<Aplazamiento />} />
-            <Route path='/aplazamiento/:id' element={<VerAplazamiento />} />
-            <Route path='/reintegros' element={<Reintegros />} />
-            <Route path='/reintegros/:id' element={<VerReintegro />} />
-            <Route path='/cancelaciones/:id' element={<VerCancelacion />} />
-            <Route path='/cancelaciones' element={<Cancelaciones />} />
+            <Route path='/matricula/aplazamiento' element={<Aplazamiento />} />
+            <Route
+              path='/matricula/aplazamiento/:id'
+              element={<VerAplazamiento />}
+            />
+            <Route path='/matricula/reintegros' element={<Reintegros />} />
+            <Route
+              path='/matricula/reintegros/:id'
+              element={<VerReintegro />}
+            />
+            <Route
+              path='/matricula/cancelaciones/:id'
+              element={<VerCancelacion />}
+            />
+            <Route
+              path='/matricula/cancelaciones'
+              element={<Cancelaciones />}
+            />
 
             {/* Materias */}
             <Route path='/academico/materias' element={<Materias />} />
@@ -152,10 +164,7 @@ function App() {
             <Route path='/academico/grupos' element={<Grupos />} />
 
             {/* Resto de rutas protegidas */}
-            <Route path='/notas/:id' element={<Notas />} />
-            <Route path='/pregrado/grupos' element={<GruposPregrado />} />
-            <Route path='/grupo' element={<VerGrupo />} />
-            <Route path='/usuario' element={<VerUsuario />} />
+            <Route path='/pregrado/grupos/notas' element={<Notas />} />
             <Route path='/crear-usuario' element={<CrearUsuario />} />
             <Route path='/estado-proyecto' element={<EstadoProyecto />} />
             <Route path='/seguimiento' element={<Seguimiento />} />
@@ -170,12 +179,12 @@ function App() {
             />
             <Route path='/proyectos-admin' element={<AdminProyectos />} />
             <Route
-              path='/sustentaciones-admin'
-              element={<AdminSustentaciones />}
+              path='/grupos-admin'
+              element={<AdminGrupos />}
             />
 
-            <Route path='/admin' element={<Admins />} />
-            <Route path='/crear-admin' element={<CrearAdmin />} />
+            <Route path='/admin/admins' element={<Admins />} />
+            <Route path='/admin/crear-admin' element={<CrearAdmin />} />
             <Route path='/matricula/inclusion' element={<Inclusion />} />
             <Route
               path='/matricula/inclusion/matricular/:id'
@@ -189,6 +198,20 @@ function App() {
               path='/matricula/inclusion/matricular/pensum/:id'
               element={<PensumEstudiante />}
             />
+
+            {/* Grupos pregrado */}
+            <Route path='/pregrado/grupos' element={<GruposPregrado />} />
+            <Route
+              path='/pregrado/grupos/grupo'
+              element={<VerGrupoPregrado />}
+            />
+            <Route
+              path='/pregrado/grupos/grupo/usuario'
+              element={<VerEstudiantePregrado />}
+            />
+
+            {/* Grupos posgrado */}
+
             <Route path='/posgrado/grupos' element={<GruposPosgrado />} />
             <Route
               path='/posgrado/grupos/ver-grupo/:id'
@@ -203,7 +226,10 @@ function App() {
               element={<NotasPosgrado />}
             />
 
-            <Route path='/terminar-semestre' element={<TerminarSemestre />} />
+            <Route
+              path='/admin/terminar-semestre'
+              element={<TerminarSemestre />}
+            />
           </Route>
         </Route>
 

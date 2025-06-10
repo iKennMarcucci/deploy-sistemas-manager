@@ -11,10 +11,12 @@ const VerGrupoPosgrado = () => {
   const [grupo, setGrupo] = useState(null)
   const [listaEstudiantes, setListaEstudiantes] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoGrupo, setCargandoGrupo] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
     if (id) {
+      setCargandoGrupo(true)
       fetch(`${backendUrl}/estudiantes/grupo-cohorte/${id}`)
         .then((response) => response.json())
         .then((data) => {
@@ -31,29 +33,25 @@ const VerGrupoPosgrado = () => {
           setListaEstudiantes(data.estudiantes)
         })
     }
-  }, [])
+  }, [id])
 
   useEffect(() => {
     if (listaEstudiantes.length > 0) {
-      const estudiantesConMatricula = listaEstudiantes.map(
-        (estudiante) => (
-          console.log(estudiante),
-          {
-            ...estudiante,
-            Código: estudiante.codigo,
-            Nombre: [
-              estudiante.nombre,
-              estudiante.nombre2,
-              estudiante.apellido,
-              estudiante.apellido2
-            ]
-              .filter(Boolean)
-              .join(' '),
-            'Correo electrónico': estudiante.email
-          }
-        )
-      )
+      const estudiantesConMatricula = listaEstudiantes.map((estudiante) => ({
+        ...estudiante,
+        Código: estudiante.codigo,
+        Nombre: [
+          estudiante.nombre,
+          estudiante.nombre2,
+          estudiante.apellido,
+          estudiante.apellido2
+        ]
+          .filter(Boolean)
+          .join(' '),
+        'Correo electrónico': estudiante.email
+      }))
       setInformacion(estudiantesConMatricula)
+      setCargandoGrupo(false)
     }
   }, [listaEstudiantes])
 
@@ -107,6 +105,7 @@ const VerGrupoPosgrado = () => {
           acciones={acciones}
           itemsPorPagina={10}
           filtros={filtros}
+          cargandoContenido={cargandoGrupo}
         />
       </div>
     </div>

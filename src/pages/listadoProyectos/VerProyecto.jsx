@@ -437,7 +437,7 @@ export default function VerProyecto() {
                                        ? <CircleAlert className="text-amber-400" />
                                        : <Circle className="text-gris-intermedio" />
                            }
-                           {(esDirector || userRole === "ROLE_ADMIN") && (
+                           {(esDirector || userRole === "ROLE_ADMIN" || userRole === "ROLE_SUPERADMIN") && (
                               <div className="flex gap-1 mt-1">
                                  <button
                                     className="text-green-600 hover:text-green-800"
@@ -467,7 +467,7 @@ export default function VerProyecto() {
                                        ? <CircleAlert className="text-amber-400" />
                                        : <Circle className="text-gris-intermedio" />
                            }
-                           {(esCodirector || userRole === "ROLE_ADMIN") && (
+                           {(esCodirector || userRole === "ROLE_ADMIN" || userRole === "ROLE_SUPERADMIN") && (
                               <div className="flex gap-1 mt-1">
                                  <button
                                     className="text-green-600 hover:text-green-800"

@@ -10,7 +10,7 @@ import {
 import { useState, useEffect, useRef } from 'react'
 import Boton from '../../../components/Boton'
 import { ArrowLeft } from 'lucide-react'
-import { today, getLocalTimeZone } from '@internationalized/date'
+import { today, getLocalTimeZone, parseDate } from '@internationalized/date'
 import AlertaModal from '../../../components/AlertaModal'
 
 const CrearEstudiante = () => {
@@ -261,6 +261,44 @@ const CrearEstudiante = () => {
     }
   }, [programa])
 
+  const buscarEstudiante = async () => {
+    if (codigoErrors.length === 0) {
+      fetch(
+        `${backendUrl}/api/oracle/estudiantes/buscar/codigo?codigo=${codigo}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.length > 0) {
+            const estudiante = data[0]
+
+            const toCapitalCase = (str) => {
+              if (!str) return ''
+              return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+            }
+
+            setPrimerNombre(toCapitalCase(estudiante.primerNombre) || '')
+            setSegundoNombre(toCapitalCase(estudiante.segundoNombre) || '')
+            setPrimerApellido(toCapitalCase(estudiante.primerApellido) || '')
+            setSegundoApellido(toCapitalCase(estudiante.segundoApellido) || '')
+            setCedula(estudiante.documento || '')
+            setCorreo(estudiante.email || '')
+
+            // Convertir fecha de nacimiento del formato yyyy-mm-dd a DateValue
+            if (estudiante.fechaNacimiento) {
+              const fechaParsed = parseDate(estudiante.fechaNacimiento)
+              setFechaNacimiento(fechaParsed)
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('Error al buscar el estudiante:', error)
+          setAlertType('error')
+          setAlertMessage('Error al buscar el estudiante')
+          setIsAlertOpen(true)
+        })
+    }
+  }
+
   const onSubmit = async (e) => {
     e.preventDefault()
 
@@ -282,11 +320,7 @@ const CrearEstudiante = () => {
   const buscarUsuarioMoodlePorEmail = async (email) => {
     try {
       const moodleSearchResponse = await fetch(
-        `${moodleUrl}?wstoken=${moodleToken}` +
-          `&moodlewsrestformat=json` +
-          `&wsfunction=core_user_get_users` +
-          `&criteria[0][key]=email` +
-          `&criteria[0][value]=${email}`
+        `${moodleUrl}?wstoken=${moodleToken}&moodlewsrestformat=json&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=${encodeURIComponent(email)}`
       )
 
       const moodleSearchData = await moodleSearchResponse.json()
@@ -296,7 +330,7 @@ const CrearEstudiante = () => {
         moodleSearchData.users &&
         moodleSearchData.users.length > 0
       ) {
-        return moodleSearchData.users[0] // Retorna el primer usuario encontrado
+        return moodleSearchData.users[0].id // Retorna solo el ID del usuario encontrado
       }
 
       return null // No se encontró usuario
@@ -365,19 +399,54 @@ const CrearEstudiante = () => {
       }
 
       const responseData = await response.json()
-      console.log('Estudiante creado en backend:', responseData)
 
       try {
-        // 2. Buscar si existe usuario en Moodle con el email
-        const usuarioExistente = await buscarUsuarioMoodlePorEmail(correo)
+        // 2. Verificar si el usuario ya existe en Moodle
+        let moodleUserId = await buscarUsuarioMoodlePorEmail(correo)
 
-        if (usuarioExistente) {
-          // 2.1. Si existe el usuario, vincular con el backend
-          console.log('Usuario encontrado en Moodle:', usuarioExistente)
+        if (!moodleUserId) {
+          // Usuario no existe, crear en Moodle
+          const moodleCreateResponse = await fetch(
+            `${moodleUrl}?wstoken=${moodleToken}` +
+              `&moodlewsrestformat=json` +
+              `&wsfunction=core_user_create_users` +
+              `&users[0][username]=${codigo}` +
+              `&users[0][email]=${correo}` +
+              `&users[0][lastname]=${[primerApellido, segundoApellido].filter(Boolean).join(' ')}` +
+              `&users[0][firstname]=${[primerNombre, segundoNombre].filter(Boolean).join(' ')}` +
+              `&users[0][password]=${passwordSeguro}`
+          )
 
+          const moodleCreateData = await moodleCreateResponse.json()
+
+          if (
+            moodleCreateData &&
+            moodleCreateData.length > 0 &&
+            moodleCreateData[0].id
+          ) {
+            moodleUserId = moodleCreateData[0].id
+          } else if (moodleCreateData && moodleCreateData.exception) {
+            setAlertType('warning')
+            setAlertMessage(
+              `Estudiante creado pero no se pudo crear en Moodle: ${moodleCreateData.message || 'Error desconocido'}`
+            )
+            setIsAlertOpen(true)
+            return
+          } else {
+            setAlertType('warning')
+            setAlertMessage(
+              'Estudiante creado pero hubo problemas al crear el usuario en Moodle'
+            )
+            setIsAlertOpen(true)
+            return
+          }
+        }
+
+        // 3. Vincular el moodleId con el backend
+        if (moodleUserId) {
           const body = {
             backendId: responseData.id,
-            moodleId: usuarioExistente.id
+            moodleId: moodleUserId
           }
 
           const moodleUpdateResponse = await fetch(
@@ -402,65 +471,8 @@ const CrearEstudiante = () => {
               'Estudiante creado pero hubo problemas al vincular con Moodle'
             )
           }
-        } else {
-          // 2.2. Si no existe, crear usuario en Moodle
-          const moodleResponse = await fetch(
-            `${moodleUrl}?wstoken=${moodleToken}` +
-              `&moodlewsrestformat=json` +
-              `&wsfunction=core_user_create_users` +
-              `&users[0][username]=${codigo}` +
-              `&users[0][email]=${correo}` +
-              `&users[0][lastname]=${[primerApellido, segundoApellido].filter(Boolean).join(' ')}` +
-              `&users[0][firstname]=${[primerNombre, segundoNombre].filter(Boolean).join(' ')}` +
-              `&users[0][password]=${passwordSeguro}`
-          )
-
-          const moodleData = await moodleResponse.json()
-          console.log('Respuesta de Moodle al crear usuario:', moodleData)
-
-          if (moodleData && moodleData.length > 0 && moodleData[0].id) {
-            // Usuario creado exitosamente en Moodle, actualizar ID en backend
-            const body = {
-              backendId: responseData.id,
-              moodleId: moodleData[0].id
-            }
-
-            const moodleUpdateResponse = await fetch(
-              `${backendUrl}/estudiantes/moodle`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-              }
-            )
-
-            if (moodleUpdateResponse.ok) {
-              setAlertType('success')
-              setAlertMessage('Estudiante creado correctamente')
-            } else {
-              setAlertType('warning')
-              setAlertMessage(
-                'Estudiante creado pero hubo problemas al sincronizar con Moodle'
-              )
-            }
-          } else if (moodleData && moodleData.exception) {
-            // Error al crear en Moodle
-            console.error('Error de Moodle:', moodleData)
-            setAlertType('warning')
-            setAlertMessage(
-              `Estudiante creado pero no se pudo crear en Moodle: ${moodleData.message || 'Error desconocido'}`
-            )
-          } else {
-            setAlertType('warning')
-            setAlertMessage(
-              'Estudiante creado pero hubo problemas al crear el usuario en Moodle'
-            )
-          }
         }
       } catch (moodleError) {
-        console.error('Error al integrar con Moodle:', moodleError)
         setAlertType('warning')
         setAlertMessage(
           'Estudiante creado pero no se pudo procesar la integración con Moodle'
@@ -469,7 +481,6 @@ const CrearEstudiante = () => {
 
       setIsAlertOpen(true)
     } catch (error) {
-      console.error('Error:', error)
       if (!isAlertOpen) {
         setAlertType('error')
         setAlertMessage('Error al crear el estudiante')
@@ -642,58 +653,63 @@ const CrearEstudiante = () => {
         <Divider className='mb-4' />
         <div className='w-full flex flex-col'>
           <div className='w-full flex flex-row'>
-            <Input
-              classNames={{
-                label: `w-1/4 h-[40px] flex items-center group-data-[has-helper=true]:pt-0`,
-                base: 'flex items-start',
-                inputWrapper:
-                  'border border-gris-institucional rounded-[15px] w-full max-h-[40px]',
-                mainWrapper: 'w-1/2 '
-              }}
-              className='mb-4'
-              isRequired
-              label='Cédula de ciudadanía'
-              labelPlacement='outside-left'
-              name='cedula'
-              placeholder='Ingresa la cédula'
-              type='text'
-              value={cedula}
-              onValueChange={(value) => setCedula(value)}
-              isInvalid={cedulaErrors.length > 0}
-              errorMessage={() => (
-                <ul className='text-xs text-danger mt-1'>
-                  {cedulaErrors.map((error, i) => (
-                    <li key={i}>{error}</li>
-                  ))}
-                </ul>
-              )}
-            />
-            <Input
-              classNames={{
-                label: `w-1/4 h-[40px] flex items-center group-data-[has-helper=true]:pt-0`,
-                base: 'flex items-start',
-                inputWrapper:
-                  'border border-gris-institucional rounded-[15px] w-full max-h-[40px]',
-                mainWrapper: 'w-1/2 '
-              }}
-              isRequired
-              className='mb-4'
-              label='Código'
-              labelPlacement='outside-left'
-              name='código'
-              placeholder='Ingresa el código'
-              type='text'
-              value={codigo}
-              onValueChange={(value) => setCodigo(value)}
-              isInvalid={codigoErrors.length > 0}
-              errorMessage={() => (
-                <ul className='text-xs text-danger mt-1'>
-                  {codigoErrors.map((error, i) => (
-                    <li key={i}>{error}</li>
-                  ))}
-                </ul>
-              )}
-            />
+            <div className='w-1/2 flex flex-row'>
+              <Input
+                classNames={{
+                  label: `w-1/4 h-[40px] flex items-center group-data-[has-helper=true]:pt-0`,
+                  base: 'flex items-start',
+                  inputWrapper:
+                    'border border-gris-institucional rounded-[15px] w-full max-h-[40px]',
+                  mainWrapper: 'w-1/2 '
+                }}
+                className='mb-4'
+                isRequired
+                label='Cédula de ciudadanía'
+                labelPlacement='outside-left'
+                name='cedula'
+                placeholder='Ingresa la cédula'
+                type='text'
+                value={cedula}
+                onValueChange={(value) => setCedula(value)}
+                isInvalid={cedulaErrors.length > 0}
+                errorMessage={() => (
+                  <ul className='text-xs text-danger mt-1'>
+                    {cedulaErrors.map((error, i) => (
+                      <li key={i}>{error}</li>
+                    ))}
+                  </ul>
+                )}
+              />
+            </div>
+            <div className='w-1/2 flex flex-row ml-2'>
+              <Input
+                classNames={{
+                  label: `w-1/4 h-[40px] flex items-center group-data-[has-helper=true]:pt-0`,
+                  base: 'flex items-start',
+                  inputWrapper:
+                    'border border-gris-institucional rounded-[15px] w-full max-h-[40px]',
+                  mainWrapper: 'w-[60%] '
+                }}
+                isRequired
+                className='mb-4'
+                label='Código'
+                labelPlacement='outside-left'
+                name='código'
+                placeholder='Ingresa el código'
+                type='text'
+                value={codigo}
+                onValueChange={(value) => setCodigo(value)}
+                isInvalid={codigoErrors.length > 0}
+                errorMessage={() => (
+                  <ul className='text-xs text-danger mt-1'>
+                    {codigoErrors.map((error, i) => (
+                      <li key={i}>{error}</li>
+                    ))}
+                  </ul>
+                )}
+              />
+              <Boton onClick={buscarEstudiante}>Buscar</Boton>
+            </div>
           </div>
         </div>
         <p className='text-normal mt-8'>Información de contacto</p>

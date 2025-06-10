@@ -15,6 +15,7 @@ const NotasPosgrado = () => {
   const [estudiantes, setEstudiantes] = useState([])
   const [notas, setNotas] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoNotas, setCargandoNotas] = useState(true)
   const [cargando, setCargando] = useState(false)
 
   // Nuevo estado para controlar si hay notas registradas
@@ -50,7 +51,6 @@ const NotasPosgrado = () => {
       )
 
       if (!respMatriculas.ok) {
-        console.error('Error al verificar matrículas')
         return
       }
 
@@ -63,7 +63,6 @@ const NotasPosgrado = () => {
         // Si la nota no es null, significa que ya se registraron notas al menos una vez
         const tieneNotasRegistradas = matriculaGrupo.nota !== null
         setNotasRegistradas(tieneNotasRegistradas)
-        console.log('¿Hay notas registradas?', tieneNotasRegistradas)
       }
     } catch (error) {
       console.error('Error al verificar si hay notas registradas:', error)
@@ -137,7 +136,7 @@ const NotasPosgrado = () => {
 
       // Actualizar el estado con la información procesada
       setInformacion(infoEstudiantes)
-      console.log('Información procesada:', infoEstudiantes)
+      setCargandoNotas(false)
     }
   }, [notas, estudiantes])
 
@@ -207,10 +206,7 @@ const NotasPosgrado = () => {
         if (!respRegistrar.ok) {
           throw new Error(`Error al registrar la nota de ${estudiante.Nombre}`)
         }
-
-        console.log(`Nota registrada correctamente para ${estudiante.Nombre}`)
       } catch (error) {
-        console.error(`Error al registrar nota:`, error)
         errores.push(`${estudiante.Nombre}: ${error.message}`)
       }
     }
@@ -371,6 +367,7 @@ const NotasPosgrado = () => {
           columnas={['Código', 'Nombre', 'DEF']}
           filtros={['Código', 'Nombre']}
           acciones={acciones}
+          cargandoContenido={cargandoNotas}
         />
       </div>
       <div className='w-full flex mb-8 mt-14 justify-end'>

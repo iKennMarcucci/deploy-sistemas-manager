@@ -11,16 +11,10 @@ import {
 } from "lucide-react";
 import {
     Input,
-    Divider,
-    Textarea,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter
+    Divider
 } from "@heroui/react";
 import Boton from "../../components/Boton";
 import Modal from "../../components/Modal";
-import TablaEstados from "../../components/TablaEstados";
 import AlertaModal from "../../components/AlertaModal";
 
 const VerReintegro = () => {
@@ -128,11 +122,16 @@ const VerReintegro = () => {
 
         const formData = new FormData();
         formData.append('informe', selectedFile);
+        const userStorage = JSON.parse(localStorage.getItem('userInfo'));
+        const nombreUsuario = userStorage && userStorage.nombre ? userStorage.nombre : "Usuario no identificado";
 
         try {
             const response = await fetch(`${backendUrl}/reintegro/aprobar/${id}`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Usuario': nombreUsuario,
+                }
             });
 
             const data = await response.json();
@@ -220,12 +219,12 @@ const VerReintegro = () => {
             // Limpiar elementos del DOM y revocar URL
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            
+
             // Mostrar mensaje de éxito
             showAlerta('Documento descargado correctamente', 'success', 'Descarga completada');
 
         } catch (error) {
-            showAlerta(`${error.message}`, 'error', 'Error de descarga');
+            showAlerta(`Error al descargar el informe: ${error.message}`, 'error', 'Error de descarga');
         } finally {
             setDownloadingReport(false);
         }
@@ -436,7 +435,7 @@ const VerReintegro = () => {
                             ¿Está seguro que desea aprobar la solicitud de reintegro para el estudiante {solicitud.estudianteNombre}?
                         </p>
                         <p className="mt-2 mb-1">
-                            Esta acción aprobará el reintegro, habilitará al estudiante para matricular materias y cambiará el estado del estudiante a "En curso".
+                            Esta acción aprobará el reintegro, habilitará al estudiante para matricular materias y cambiará el estado del estudiante a En curso.
                         </p>
 
                         <p className="text-normal mt-6 mb-2">Documento de Soporte (PDF o DOCX)</p>

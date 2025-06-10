@@ -36,7 +36,7 @@ export default function NextActivity({ init }) {
             <p className="text-gris-institucional text-sm">Calendario de actividades</p>
          </div>
          {
-            init.length === 0 ?
+            init.length > 0 ?
                <a target="_blank" href={lugar || "#"}>
                   <Alert
                      aria-label="Alerta de tarea atrasada"

@@ -82,7 +82,7 @@ export function useAuth() {
       const decodedToken = jwtDecode(token)
       const userData = {
         id: decodedToken.sub,
-        picture: decodedToken.picture ?? "https://placehold.co/250x250?text=User",
+        picture: decodedToken.foto ?? "https://placehold.co/250x250?text=User",
         role: decodedToken.role,
         email: decodedToken.sub,
         firstName: decodedToken.nombre,
@@ -111,7 +111,7 @@ export function useAuth() {
       const decodedToken = jwtDecode(googleToken)
       const userData = {
         id: decodedToken.sub,
-        picture: decodedToken.picture ?? "https://placehold.co/250x250?text=User",
+        picture: decodedToken.foto ?? "https://placehold.co/250x250?text=User",
         role: decodedToken.role,
         email: decodedToken.sub,
         firstName: decodedToken.nombre,

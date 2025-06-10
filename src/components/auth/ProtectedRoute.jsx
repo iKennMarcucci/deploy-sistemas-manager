@@ -5,39 +5,46 @@ import { jwtDecode } from 'jwt-decode'
 
 // Rutas que solo pueden ser accedidas por administradores
 const ADMIN_ONLY_ROUTES = [
-  '/administrador',
-  '/materias',
-  '/pensum',
-  '/programas',
-  '/reintegros',
-  '/cancelaciones',
-  '/aplazamientos',
-  '/contraprestaciones',
-  '/posgrado',
+  '/academico',
+  '/matricula',
+  '/usuarios',
   '/pregrado',
-  '/profesores',
-  '/estudiantes'
+  '/posgrado',
+  '/admin'
 ]
 
 // Rutas que solo pueden ser accedidas por superadministradores
-const SUPERADMIN_ONLY_ROUTES = ['/admin', '/terminar-semestre', '/crear-admin']
+const SUPERADMIN_ONLY_ROUTES = ['/admin']
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading, authType, user, token, userLoggedGetter } = useAuth()
   const location = useLocation()
   const [isAdmin, setIsAdmin] = useState(false)
   const [userRole, setUserRole] = useState(null)
+  const [hasValidToken, setHasValidToken] = useState(false)
+  const [hasUserInfo, setHasUserInfo] = useState(false)
+  const [isGoogleUser, setIsGoogleUser] = useState(false)
 
   useEffect(() => {
-    // Verificar si el usuario es administrador comprobando la existencia del accessToken
+    // Verificar si existe al menos uno de los tokens requeridos
     const accessToken = localStorage.getItem('accessToken')
+    const googleToken = localStorage.getItem('googleToken')
+    const userInfo = localStorage.getItem('userInfo')
 
-    // Decodificar el accessToken para obtener los roles
-    if (accessToken) {
+    const tokenExists = !!(accessToken || googleToken)
+    setHasValidToken(tokenExists)
+
+    // Verificar si existe userInfo (solo se establece en login de admin)
+    setHasUserInfo(!!userInfo)
+
+    // Verificar si es usuario de Google (tiene googleToken, independientemente de accessToken)
+    setIsGoogleUser(!!googleToken)
+
+    // Solo verificar roles de admin si NO es usuario de Google y tiene accessToken + userInfo
+    if (!googleToken && accessToken && userInfo) {
       try {
         const decodedToken = jwtDecode(accessToken)
         const role = decodedToken.role
-        console.log('Rol del usuario (role):', role)
 
         // Guardar el rol del usuario
         setUserRole(role)
@@ -46,6 +53,8 @@ const ProtectedRoute = () => {
         setIsAdmin(role === 'ROLE_ADMIN' || role === 'ROLE_SUPERADMIN')
       } catch (error) {
         console.error('Error al decodificar el accessToken:', error)
+        setIsAdmin(false)
+        setUserRole(null)
       }
     } else {
       setIsAdmin(false)
@@ -56,13 +65,6 @@ const ProtectedRoute = () => {
   // Función para imprimir la información del usuario
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('Información del usuario autenticado:', {
-        usuario: user,
-        token: token,
-        tipoAutenticacion: authType,
-        rol: user.rol || 'No especificado'
-      })
-
       // Si hay un token, intentar decodificarlo y mostrar su contenido
       if (token) {
         try {
@@ -70,8 +72,6 @@ const ProtectedRoute = () => {
           const tokenParts = token.split('.')
           if (tokenParts.length === 3) {
             // Decodificar la parte del payload (índice 1)
-            const payload = JSON.parse(atob(tokenParts[1]))
-            console.log('Contenido del token decodificado:', payload)
           }
         } catch (error) {
           console.error('Error al decodificar el token:', error)
@@ -88,6 +88,23 @@ const ProtectedRoute = () => {
     )
   }
 
+  // Si no hay tokens válidos, redirigir según la ruta que intenta acceder
+  if (!hasValidToken) {
+    // Si estaban intentando acceder a rutas de proyectos, redirigir a login de Google
+    if (
+      location.pathname.startsWith('/estado-proyecto') ||
+      location.pathname.startsWith('/listado-informes') ||
+      location.pathname.startsWith('/seguimiento') ||
+      location.pathname.startsWith('/informes') ||
+      location.pathname.startsWith('/pregrado/grupos')
+    ) {
+      return <Navigate to='/login' replace />
+    }
+
+    // Para otras rutas, redirigir al login de administrador
+    return <Navigate to='/login-admin' replace />
+  }
+
   // Verificar si la ruta actual requiere permisos de administrador o superadministrador
   const currentPath = location.pathname
   const requiresAdmin = ADMIN_ONLY_ROUTES.some((route) =>
@@ -97,8 +114,56 @@ const ProtectedRoute = () => {
     currentPath.startsWith(route)
   )
 
+  // VALIDACIÓN PRINCIPAL: Si es usuario de Google e intenta acceder a rutas administrativas, redirigir inmediatamente
+  if (isGoogleUser && (requiresAdmin || requiresSuperAdmin)) {
+    return (
+      <Navigate
+        to='/'
+        replace
+        state={{
+          message:
+            'Los usuarios de Google no tienen acceso a funcionalidades administrativas. Debe iniciar sesión con una cuenta de administrador.'
+        }}
+      />
+    )
+  }
+
+  // VALIDACIÓN SECUNDARIA: Si intenta acceder a rutas administrativas sin las credenciales correctas
+  if (requiresAdmin || requiresSuperAdmin) {
+    const accessToken = localStorage.getItem('accessToken')
+    const googleToken = localStorage.getItem('googleToken')
+
+    // Si tiene googleToken, bloquear acceso
+    if (googleToken) {
+      return (
+        <Navigate
+          to='/'
+          replace
+          state={{
+            message:
+              'Acceso denegado. Los usuarios de Google no pueden acceder a funcionalidades administrativas.'
+          }}
+        />
+      )
+    }
+
+    // Si no tiene accessToken O no tiene userInfo, bloquear acceso
+    if (!accessToken || !hasUserInfo) {
+      return (
+        <Navigate
+          to='/'
+          replace
+          state={{
+            message:
+              'No tienes permisos para acceder a esta página. Debes iniciar sesión como administrador.'
+          }}
+        />
+      )
+    }
+  }
+
   // Si la ruta requiere permisos de superadmin y el usuario no es superadmin, redirigir
-  if (isAuthenticated && requiresSuperAdmin && userRole !== 'ROLE_SUPERADMIN') {
+  if (requiresSuperAdmin && userRole !== 'ROLE_SUPERADMIN') {
     return (
       <Navigate
         to='/'
@@ -111,7 +176,7 @@ const ProtectedRoute = () => {
   }
 
   // Si la ruta requiere permisos de administrador y el usuario no es admin ni superadmin, redirigir
-  if (isAuthenticated && requiresAdmin && !isAdmin) {
+  if (requiresAdmin && !isAdmin) {
     return (
       <Navigate
         to='/'
@@ -121,25 +186,8 @@ const ProtectedRoute = () => {
     )
   }
 
-  // Si está autenticado, permitir el acceso
-  if (isAuthenticated || !!userLoggedGetter) {
-    return <Outlet />
-  }
-
-  console.log(!!userLoggedGetter)
-
-  // Si no está autenticado, redirigir a la página de login correspondiente
-  // Si estaban intentando acceder a rutas de proyectos, redirigir a login de Google
-  if (location.pathname.startsWith('/estado-proyecto') ||
-    location.pathname.startsWith('/listado-informes') ||
-    location.pathname.startsWith('/seguimiento') ||
-    location.pathname.startsWith('/informes') ||
-    location.pathname.startsWith('/pregrado/grupos')) {
-    return <Navigate to='/login' replace />
-  }
-
-  // Para otras rutas, redirigir al login de administrador
-  return <Navigate to='/login-admin' replace />
+  // Si tiene token válido, permitir el acceso
+  return <Outlet />
 }
 
 export default ProtectedRoute

@@ -11,14 +11,10 @@ import {
 } from 'lucide-react'
 import {
     Input,
-    Divider,
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter
+    Divider
 } from '@heroui/react'
 import Boton from '../../components/Boton'
+import Modal from '../../components/Modal'
 import AlertaModal from '../../components/AlertaModal'
 
 const VerContraprestacion = () => {
@@ -42,7 +38,7 @@ const VerContraprestacion = () => {
 
     // Estado para controlar la descarga del informe
     const [downloadingReport, setDownloadingReport] = useState(false)
-    
+
     // Estados para AlertaModal
     const [alertaModalOpen, setAlertaModalOpen] = useState(false)
     const [alertaMessage, setAlertaMessage] = useState('')
@@ -145,17 +141,22 @@ const VerContraprestacion = () => {
 
         const formData = new FormData()
         formData.append('informe', selectedFile)
+        const userStorage = JSON.parse(localStorage.getItem('userInfo'))
+        const nombreUsuario = userStorage && userStorage.nombre ? userStorage.nombre : "Usuario no identificado"
 
         try {
             const response = await fetch(`${backendUrl}/contraprestaciones/aprobar/${id}`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Usuario': nombreUsuario,
+                }
             })
 
             // Intentamos obtener la respuesta JSON incluso si hay un error
             const data = await response.json().catch(() => ({
-                mensaje: response.ok 
-                    ? 'Contraprestación aprobada con éxito' 
+                mensaje: response.ok
+                    ? 'Contraprestación aprobada con éxito'
                     : 'Error al aprobar la contraprestación'
             }));
 
@@ -236,7 +237,7 @@ const VerContraprestacion = () => {
 
             // Actualizar datos para reflejar cambios (como la fecha de certificado)
             fetchContraprestacionData()
-            
+
             // Mostrar mensaje de éxito
             showAlerta('Certificado generado y descargado correctamente', 'success', 'Descarga completada')
 
@@ -300,7 +301,7 @@ const VerContraprestacion = () => {
             // Limpiar elementos del DOM y revocar URL
             document.body.removeChild(link)
             window.URL.revokeObjectURL(url)
-            
+
             // Mostrar mensaje de éxito
             showAlerta('Documento descargado correctamente', 'success', 'Descarga completada')
 
@@ -620,15 +621,17 @@ const VerContraprestacion = () => {
             {/* Modal para aprobar contraprestación */}
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                className="z-50"
-                size="lg"
-            >
-                <ModalContent>
-                    <ModalHeader className="flex flex-col gap-1 text-center">
-                        <p className="text-titulos">Aprobar Contraprestación</p>
-                    </ModalHeader>
-                    <ModalBody>
+                onOpenChange={(open) => {
+                    if (!approving) setIsModalOpen(open);
+                }}
+                cabecera=""
+                size="xl"
+                cuerpo={
+                    <div>
+                        <div className="flex flex-col gap-1 text-center mb-6">
+                            <p className="text-2xl font-semibold text-titulos">Aprobar Contraprestación</p>
+                        </div>
+
                         <p>
                             ¿Estás seguro que quieres aprobar la contraprestación de {contraprestacion.primerNombre} {contraprestacion.primerApellido} realizada en el semestre {contraprestacion.semestre}?
                         </p>
@@ -698,25 +701,22 @@ const VerContraprestacion = () => {
                         {fileError && (
                             <p className="text-red-600 mt-2 text-sm">{fileError}</p>
                         )}
-                    </ModalBody>
-                    <ModalFooter className="flex justify-between">
+                    </div>
+                }
+                footer={
+                    <div className="flex justify-end w-full">
                         <Boton
-                            variant="bordered"
-                            onClick={() => setIsModalOpen(false)}
-                            disabled={approving}
-                        >
-                            Cancelar
-                        </Boton>
-                        <Boton
+                            color="success"
                             onClick={handleApproveContraprestacion}
                             disabled={approving || !selectedFile}
+                            startContent={approving ? null : <CheckCircle size={18} />}
                         >
                             {approving ? 'Aprobando...' : 'Aprobar'}
                         </Boton>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-            
+                    </div>
+                }
+            />
+
             {/* AlertaModal para mostrar mensajes de éxito o error */}
             <AlertaModal
                 isOpen={alertaModalOpen}

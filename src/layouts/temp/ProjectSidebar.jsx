@@ -11,7 +11,7 @@ import { User } from 'lucide-react'
 import { useAuth } from '../../lib/hooks/useAuth'
 
 const ProjectSidebar = () => {
-   const { userLogged, userLoggedSetter } = useAuth()
+   const { userLoggedSetter } = useAuth()
    const { selectedMenu, setSelectedMenu, selectedOption, setSelectedOption } = useSidebar()
    const toggleMenu = (index) => setSelectedMenu(selectedMenu === index ? null : index)
    const handleOptionClick = (label) => setSelectedOption(label)
@@ -94,7 +94,7 @@ const ProjectSidebar = () => {
                      </section>
                      {/* {JSON.stringify(user)} */}
                      {
-                        user?.role.toLowerCase() === 'estudiante' &&
+                        user?.role.toLowerCase() === 'admin' &&
                         <ProjectMenu
                            nombre='Matrícula'
                            funcion={() => toggleMenu(1)}
@@ -112,7 +112,7 @@ const ProjectSidebar = () => {
                         />
                      }
                      {
-                        user?.role.toLowerCase() !== 'estudiante' &&
+                        user?.role.toLowerCase() === 'admin' &&
                         <ProjectMenu
                            nombre='Usuarios'
                            funcion={() => toggleMenu(2)}
@@ -127,7 +127,7 @@ const ProjectSidebar = () => {
                         />
                      }
                      {
-                        (user?.role.toLowerCase() === 'estudiante' || user?.role.toLowerCase() === 'docente') &&
+                        (user?.role.toLowerCase() === 'admin' || user?.role.toLowerCase() === 'docente') &&
                         <ProjectMenu
                            nombre='Grupos'
                            funcion={() => toggleMenu(3)}

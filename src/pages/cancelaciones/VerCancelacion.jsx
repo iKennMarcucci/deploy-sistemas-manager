@@ -11,12 +11,7 @@ import {
 } from "lucide-react";
 import {
     Input,
-    Divider,
-    Textarea,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter
+    Divider
 } from "@heroui/react";
 import Boton from "../../components/Boton";
 import Modal from "../../components/Modal";
@@ -129,6 +124,7 @@ const VerCancelacion = () => {
         formData.append('informe', selectedFile);
         const userStorage = JSON.parse(localStorage.getItem('userInfo'));
         const nombreUsuario = userStorage && userStorage.nombre ? userStorage.nombre : "Usuario no identificado";
+
         try {
             const response = await fetch(`${backendUrl}/cancelacion/aprobar/${id}`, {
                 method: 'POST',
@@ -212,7 +208,7 @@ const VerCancelacion = () => {
             // Limpiar elementos del DOM y revocar URL
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            
+
             // Mostrar mensaje de éxito
             showAlerta('Documento descargado correctamente', 'success', 'Descarga completada');
 
@@ -372,7 +368,7 @@ const VerCancelacion = () => {
                         labelPlacement='outside-left'
                         type='text'
                         value={solicitud.estaAprobado ? 'Aprobada' : 'Pendiente'}
-                        
+
                     />
                 </div>
             </div>

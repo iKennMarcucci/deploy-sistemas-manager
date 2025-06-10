@@ -9,6 +9,7 @@ const MatricularMateria = () => {
   const { id } = useParams()
   const { codigo } = useParams()
   const [grupos, setGrupos] = useState([])
+  const [cargandoGrupos, setCargandoGrupos] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   // Estados para AlertaModal
@@ -23,11 +24,14 @@ const MatricularMateria = () => {
   const showAlerta = (mensaje, tipo, titulo) => {
     setAlertaMessage(mensaje)
     setAlertaType(tipo)
-    setAlertaTitulo(titulo || (tipo === 'success' ? 'Operación exitosa' : 'Error'))
+    setAlertaTitulo(
+      titulo || (tipo === 'success' ? 'Operación exitosa' : 'Error')
+    )
     setAlertaModalOpen(true)
   }
 
   useEffect(() => {
+    setCargandoGrupos(true)
     fetch(`${backendUrl}/matriculas/grupos/materia/${codigo}`)
       .then((response) => {
         if (!response.ok) {
@@ -44,16 +48,25 @@ const MatricularMateria = () => {
         }))
 
         setGrupos(gruposModificado)
+        setCargandoGrupos(false)
       })
       .catch((error) => {
-        showAlerta(`Error al cargar los grupos: ${error.message}`, 'error', 'Error de conexión')
+        showAlerta(
+          `Error al cargar los grupos: ${error.message}`,
+          'error',
+          'Error de conexión'
+        )
+        setCargandoGrupos(false)
       })
   }, [])
 
   const matricular = (grupo) => {
     // Obtener el nombre del usuario del localStorage
-    const userStorage = JSON.parse(localStorage.getItem('userInfo'));
-    const nombreUsuario = userStorage && userStorage.nombre ? userStorage.nombre : "Usuario no identificado";
+    const userStorage = JSON.parse(localStorage.getItem('userInfo'))
+    const nombreUsuario =
+      userStorage && userStorage.nombre
+        ? userStorage.nombre
+        : 'Usuario no identificado'
 
     const body = {
       estudianteId: id,
@@ -71,28 +84,44 @@ const MatricularMateria = () => {
     })
       .then((response) => {
         // Intentar obtener el mensaje del servidor independiente del estado de la respuesta
-        return response.json().then(data => ({ ok: response.ok, data }))
+        return response
+          .json()
+          .then((data) => ({ ok: response.ok, data }))
           .catch(() => ({
             ok: response.ok,
             data: {
-              mensaje: response.ok ? 'Matrícula creada correctamente' : 'Error al crear la matrícula'
+              mensaje: response.ok
+                ? 'Matrícula creada correctamente'
+                : 'Error al crear la matrícula'
             }
-          }));
+          }))
       })
       .then(({ ok, data }) => {
         if (ok) {
-          showAlerta(data.mensaje || 'Matrícula creada correctamente', 'success', 'Matrícula exitosa')
+          showAlerta(
+            data.mensaje || 'Matrícula creada correctamente',
+            'success',
+            'Matrícula exitosa'
+          )
           // Retrasar el regreso para que el usuario pueda ver el mensaje
           setTimeout(() => {
-            window.history.back();
-          }, 1500);
+            window.history.back()
+          }, 1500)
         } else {
           // Mostrar el mensaje de error que viene del backend
-          showAlerta(data.mensaje || 'Error al crear la matrícula', 'error', 'Error de matrícula')
+          showAlerta(
+            data.mensaje || 'Error al crear la matrícula',
+            'error',
+            'Error de matrícula'
+          )
         }
       })
-      .catch((error) => {
-        showAlerta('Error en la conexión con el servidor', 'error', 'Error de sistema')
+      .catch(() => {
+        showAlerta(
+          'Error en la conexión con el servidor',
+          'error',
+          'Error de sistema'
+        )
       })
   }
 
@@ -118,7 +147,12 @@ const MatricularMateria = () => {
       </div>
       <p className='text-subtitulos my-4'>Grupos disponibles</p>
       <div className='w-[80%]'>
-        <Tabla informacion={grupos} columnas={columnas} acciones={acciones} />
+        <Tabla
+          informacion={grupos}
+          columnas={columnas}
+          acciones={acciones}
+          cargandoContenido={cargandoGrupos}
+        />
       </div>
 
       {/* AlertaModal para mostrar mensajes de éxito o error */}

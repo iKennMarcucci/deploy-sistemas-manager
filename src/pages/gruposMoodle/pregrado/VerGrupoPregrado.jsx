@@ -5,11 +5,12 @@ import { Eye } from 'lucide-react'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-const VerGrupo = () => {
+const VerGrupoPregrado = () => {
   const [grupo, setGrupo] = useState(null)
   const [listaEstudiantes, setListaEstudiantes] = useState([])
   const [matriculas, setMatriculas] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoGrupo, setCargandoGrupo] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const VerGrupo = () => {
   //--------Datos divisist---------//
   useEffect(() => {
     if (grupo) {
+      setCargandoGrupo(true)
       fetch(
         `${backendUrl}/api/oracle/estudiantes/buscar-por-codigo?codigo=${grupo.codCarrera}`
       )
@@ -67,37 +69,6 @@ const VerGrupo = () => {
         })
     }
   }, [grupo])
-
-  //---------Datos quemados---------//
-  /*
-  useEffect(() => {
-    if (listaEstudiantes.length > 0 && matriculas.length > 0) {
-      const estudiantesConMatricula = listaEstudiantes
-        .filter((estudiante) =>
-          matriculas.some(
-            (matricula) =>
-              estudiante.codigo === matricula.cod_car_mat + matricula.cod_alumno
-          )
-        )
-        .map((estudiante) => ({
-          ...estudiante,
-          Código: estudiante.codigo,
-          Nombre: estudiante
-            ? [
-                estudiante.primer_nombre,
-                estudiante.segundo_nombre,
-                estudiante.primer_apellido,
-                estudiante.segundo_apellido
-              ]
-                .filter(Boolean) // elimina undefined, null, '', etc.
-                .join(' ')
-            : 'Desconocido',
-          'Correo electrónico': estudiante.email || 'No disponible'
-        }))
-      setInformacion(estudiantesConMatricula)
-    }
-  }, [listaEstudiantes, matriculas])
-  */
 
   //--------Datos divisist---------//
   useEffect(() => {
@@ -125,6 +96,7 @@ const VerGrupo = () => {
           'Correo electrónico': estudiante.email || 'No disponible'
         }))
       setInformacion(estudiantesConMatricula)
+      setCargandoGrupo(false)
     }
   }, [listaEstudiantes, matriculas])
 
@@ -132,7 +104,7 @@ const VerGrupo = () => {
 
   const verEstudiante = (estudiante) => {
     localStorage.setItem('usuario', JSON.stringify(estudiante))
-    Navigate('/usuario')
+    Navigate('usuario')
     localStorage.setItem('ruta', 'grupos')
   }
 
@@ -178,10 +150,11 @@ const VerGrupo = () => {
           acciones={acciones}
           itemsPorPagina={10}
           filtros={filtros}
+          cargandoContenido={cargandoGrupo}
         />
       </div>
     </div>
   )
 }
 
-export default VerGrupo
+export default VerGrupoPregrado

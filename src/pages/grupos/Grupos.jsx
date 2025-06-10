@@ -11,6 +11,7 @@ const Grupos = () => {
   const [gruposCohorte, setGruposCohorte] = useState([])
   const [profesores, setProfesores] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoGrupos, setCargandoGrupos] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
   const moodleUrl = import.meta.env.VITE_MOODLE_URL
   const moodleToken = import.meta.env.VITE_MOODLE_TOKEN
@@ -116,6 +117,7 @@ const Grupos = () => {
   }, [pensumId])
 
   const cargarDatos = () => {
+    setCargandoGrupos(true)
     fetch(`${backendUrl}/grupos/vinculados`)
       .then((response) => response.json())
       .then((data) => {
@@ -125,6 +127,9 @@ const Grupos = () => {
         setAlertType('error')
         setAlertMessage('Error al cargar los grupos')
         setIsAlertOpen(true)
+      })
+      .finally(() => {
+        setCargandoGrupos(false)
       })
 
     fetch(`${backendUrl}/cohortes/listar`)
@@ -603,8 +608,6 @@ const Grupos = () => {
       const grupoVinculado = await vincularGrupo(nuevoGrupoId)
       if (grupoVinculado === null) return
 
-      console.log('Grupo vinculado:', grupoVinculado)
-
       // Paso 3: Obtener información de la materia
       const materiaInfo = await obtenerInformacionMateria(
         grupoVinculado.materiaId
@@ -768,18 +771,9 @@ const Grupos = () => {
   }
 
   return (
-    <div className='w-full flex flex-col justify-center items-center'>
-      <p className='text-titulos mb-6'>Grupos</p>
-      <Tabla
-        informacion={informacion}
-        filtros={filtros}
-        columnas={columnas}
-        acciones={acciones}
-        elementosPorPagina={10}
-      />
-
-      {/* Botón para abrir el modal de crear grupo */}
-      <div className='w-full flex justify-end mt-8'>
+    <div className='p-4 w-full flex flex-col justify-center items-center'>
+      <div className='w-full flex items-center justify-between mb-8'>
+        <p className='text-center text-titulos flex-1'>Grupos</p>
         <Boton
           onClick={() => {
             limpiarFormulario()
@@ -789,6 +783,14 @@ const Grupos = () => {
           Crear grupo
         </Boton>
       </div>
+      <Tabla
+        informacion={informacion}
+        filtros={filtros}
+        columnas={columnas}
+        acciones={acciones}
+        elementosPorPagina={10}
+        cargandoContenido={cargandoGrupos}
+      />
 
       {/* Modal para crear/editar grupo */}
       <Modal

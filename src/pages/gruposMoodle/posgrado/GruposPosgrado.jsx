@@ -10,6 +10,7 @@ const GruposPosgrado = () => {
   const [programa, setPrograma] = useState('')
   const [grupos, setGrupos] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoGrupos, setCargandoGrupos] = useState(true)
   const Navigate = useNavigate()
   const [grupoNombre, setGrupoNombre] = useState('')
   const backendUrl = import.meta.env.VITE_BACKEND_URL
@@ -18,6 +19,9 @@ const GruposPosgrado = () => {
   const [isOpenGrupo, setIsOpenGrupo] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [grupoSeleccionado, setGrupoSeleccionado] = useState(null)
+  const [isCreatingAll, setIsCreatingAll] = useState(false)
+  const [isCreatingIndividual, setIsCreatingIndividual] = useState(false)
+  const [progresoGrupos, setProgresoGrupos] = useState({ actual: 0, total: 0 })
 
   useEffect(() => {
     setPrograma(localStorage.getItem('codigoPrograma')) // Obtener el valor del localStorage
@@ -25,18 +29,21 @@ const GruposPosgrado = () => {
 
   useEffect(() => {
     if (programa !== '' && programa !== undefined) {
+      setCargandoGrupos(true)
       fetch(`${backendUrl}/grupos/programa/${programa}`)
         .then((response) => response.json())
         .then((data) => {
           setGrupos(data)
         })
-
-      // }
+        .finally(() => {
+          setCargandoGrupos(false)
+        })
     }
   }, [programa])
 
   useEffect(() => {
     if (grupos.length > 0) {
+      setCargandoGrupos(true)
       // Crear un array de promesas para cada grupo
       const promesas = grupos.map((grupo) =>
         fetch(`${backendUrl}/estudiantes/grupo-cohorte/${grupo.id}`)
@@ -59,6 +66,9 @@ const GruposPosgrado = () => {
         .catch((error) =>
           console.error('Error al obtener los estudiantes:', error)
         )
+        .finally(() => {
+          setCargandoGrupos(false)
+        })
     }
   }, [grupos])
 
@@ -237,10 +247,104 @@ const GruposPosgrado = () => {
     }
   }
 
-  const crearTodosLosGrupos = () => {
-    grupos.forEach((grupo) => {
-      crearGrupoMoodle(grupo)
-    })
+  // Función auxiliar para crear grupo individual sin mostrar modales
+  const crearGrupoIndividual = async (grupo) => {
+    const programaId = grupo.programaId
+
+    const programaData = await fetch(
+      `${backendUrl}/programas/${programaId}`
+    ).then((response) => response.json())
+
+    if (!grupo.moodleId) {
+      // Crear el grupo en Moodle
+      const moodleResponse = await fetch(
+        `${moodleUrl}/?wstoken=${moodleToken}` +
+          `&moodlewsrestformat=json` +
+          `&wsfunction=core_course_create_courses` +
+          `&courses[0][fullname]=${grupo.Nombre}` +
+          `&courses[0][categoryid]=${programaData.moodleId}` +
+          `&courses[0][shortname]=${grupo.codigoGrupo}`
+      )
+
+      const moodleData = await moodleResponse.json()
+      const moodleId = moodleData[0].id
+
+      // Actualizar el grupo con el moodleId
+      await fetch(
+        `${backendUrl}/grupos/moodle/${grupo.id}?moodleId=${moodleId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      // Matricular estudiantes y profesor
+      await matricularUsuarios(grupo.id, moodleId)
+    } else {
+      // El grupo ya existe, solo matricular estudiantes y profesor
+      await matricularUsuarios(grupo.id, grupo.moodleId)
+    }
+  }
+
+  const crearTodosLosGrupos = async () => {
+    try {
+      setIsCreatingAll(true)
+      setProgresoGrupos({ actual: 0, total: grupos.length })
+
+      let gruposCreados = 0
+      let gruposConError = 0
+
+      // Procesar cada grupo de la lista
+      for (let i = 0; i < grupos.length; i++) {
+        const grupo = grupos[i]
+
+        // Actualizar progreso
+        setProgresoGrupos({ actual: i + 1, total: grupos.length })
+
+        try {
+          // Llamar a la función de creación específica
+          await crearGrupoIndividual(grupo)
+          gruposCreados++
+        } catch (error) {
+          console.error(`Error procesando grupo ${grupo.grupoNombre}:`, error)
+          gruposConError++
+        }
+      }
+
+      // Mostrar resumen final
+      if (gruposConError === 0) {
+        addToast({
+          title: 'Proceso completado',
+          description: `${gruposCreados} grupos creados/actualizados exitosamente`,
+          color: 'success',
+          timeout: '5000',
+          shouldShowTimeoutProgress: true
+        })
+      } else {
+        addToast({
+          title: 'Proceso completado con errores',
+          description: `${gruposCreados} grupos exitosos, ${gruposConError} con errores`,
+          color: 'warning',
+          timeout: '5000',
+          shouldShowTimeoutProgress: true
+        })
+      }
+
+      setIsOpen(false)
+    } catch (error) {
+      addToast({
+        title: 'Error',
+        description: 'Error en el proceso masivo de creación de grupos',
+        color: 'danger',
+        timeout: '3000',
+        shouldShowTimeoutProgress: true
+      })
+    } finally {
+      setIsCreatingAll(false)
+      setProgresoGrupos({ actual: 0, total: 0 })
+    }
   }
 
   const verGrupo = (grupo) => {
@@ -251,6 +355,25 @@ const GruposPosgrado = () => {
     setGrupoNombre(grupo.Nombre)
     setGrupoSeleccionado(grupo)
     setIsOpenGrupo(true)
+  }
+
+  const crearGrupoEspecifico = async () => {
+    try {
+      setIsCreatingIndividual(true)
+      await crearGrupoMoodle(grupoSeleccionado)
+      mostrarNotificacion()
+      setIsOpenGrupo(false)
+    } catch (error) {
+      addToast({
+        title: 'Error',
+        description: 'Error al crear el grupo',
+        color: 'danger',
+        timeout: '3000',
+        shouldShowTimeoutProgress: true
+      })
+    } finally {
+      setIsCreatingIndividual(false)
+    }
   }
 
   const verNotas = (grupo) => {
@@ -279,14 +402,15 @@ const GruposPosgrado = () => {
   ]
 
   return (
-    <div className='flex flex-col items-center w-full p-4'>
-      <p className='text-titulos my-4'>Lista de grupos</p>
+    <div className='p-4 flex flex-col items-center w-full'>
+      <p className='text-titulos'>Lista de grupos</p>
       <div className='w-full my-8'>
         <Tabla
           informacion={informacion}
           columnas={columnas}
           acciones={acciones}
           filtros={filtros}
+          cargandoContenido={cargandoGrupos}
         />
       </div>
       <div className='w-full flex justify-end mt-4'>
@@ -294,45 +418,61 @@ const GruposPosgrado = () => {
           onClick={() => {
             setIsOpen(true)
           }}
+          disabled={isCreatingAll}
         >
-          Crear grupos
+          {isCreatingAll ? 'Creando grupos...' : 'Crear grupos'}
         </Boton>
       </div>
       <Modal
         isOpen={isOpen}
-        onOpenChange={setIsOpen}
+        onOpenChange={(open) => {
+          if (!isCreatingAll) {
+            setIsOpen(open)
+          }
+        }}
         cabecera='Crear Grupos'
-        cuerpo={<p>¿Estás seguro de crear/actualizar todos los grupos?</p>}
+        cuerpo={
+          <div>
+            <p>¿Estás seguro de crear/actualizar todos los grupos?</p>
+            {isCreatingAll && (
+              <p className='text-sm text-gray-600 mt-2'>
+                Procesando grupos ({progresoGrupos.actual}/
+                {progresoGrupos.total}), por favor espere...
+              </p>
+            )}
+          </div>
+        }
         footer={
-          <Boton
-            onClick={() => {
-              crearTodosLosGrupos()
-              mostrarNotificacion()
-              setIsOpen(false)
-            }}
-          >
-            Aceptar
+          <Boton onClick={crearTodosLosGrupos} disabled={isCreatingAll}>
+            {isCreatingAll ? 'Creando...' : 'Aceptar'}
           </Boton>
         }
       />
       <Modal
         isOpen={isOpenGrupo}
-        onOpenChange={setIsOpenGrupo}
+        onOpenChange={(open) => {
+          if (!isCreatingIndividual) {
+            setIsOpenGrupo(open)
+          }
+        }}
         cabecera='Crear Grupo'
         cuerpo={
-          <p>
-            {'¿Estás seguro de crear/actualizar el grupo ' + grupoNombre + '?'}
-          </p>
+          <div>
+            <p>
+              {'¿Estás seguro de crear/actualizar el grupo ' +
+                grupoNombre +
+                '?'}
+            </p>
+            {isCreatingIndividual && (
+              <p className='text-sm text-gray-600 mt-2'>
+                Creando grupo, por favor espere...
+              </p>
+            )}
+          </div>
         }
         footer={
-          <Boton
-            onClick={() => {
-              crearGrupoMoodle(grupoSeleccionado)
-              mostrarNotificacion()
-              setIsOpenGrupo(false)
-            }}
-          >
-            Aceptar
+          <Boton onClick={crearGrupoEspecifico} disabled={isCreatingIndividual}>
+            {isCreatingIndividual ? 'Creando...' : 'Aceptar'}
           </Boton>
         }
       />

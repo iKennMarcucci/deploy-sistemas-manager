@@ -8,12 +8,13 @@ const Login = () => {
   const { isAuthenticated, isLoading, userLogged } = useAuth()
 
   useEffect(() => {
+    localStorage.clear()
     if (!isLoading && isAuthenticated) {
-      if (userLogged.role.toLowerCase() === "docente") {
+      if (userLogged.role.toLowerCase() === 'docente') {
         navigate('/listado-proyectos')
         return
       }
-      if (userLogged.role.toLowerCase() === "estudiante") {
+      if (userLogged.role.toLowerCase() === 'estudiante') {
         navigate('/estado-proyecto')
         return
       }
@@ -37,12 +38,13 @@ const Login = () => {
       <div className='h-5/6 w-1/4 flex flex-col justify-center items-center'>
         <p className='text-subtitulos mb-16 text-rojo-mate'>Inicia sesión</p>
 
-        <a className='border-black/15 hover:bg-black/5 duration-150 border rounded-md py-2 px-4 w-fit flex justify-center items-center gap-2'
-          href={url}>
+        <a
+          className='border-black/15 hover:bg-black/5 duration-150 border rounded-md py-2 px-4 w-fit flex justify-center items-center gap-2'
+          href={url}
+        >
           <FcGoogle className='text-[20px] mr-2' />
           Iniciar Sesión con Google
         </a>
-
       </div>
     </div>
   )

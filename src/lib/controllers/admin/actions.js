@@ -173,6 +173,122 @@ export const importarProyecto = async ({ body, accessToken }) => {
    }
 }
 
+export const crearGrupo = async ({ body, accessToken }) => {
+   try {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/grupos-lineas/grupo`,
+         body, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` } })
+
+      return response.data
+   } catch (error) {
+      throw new Error(error ?? {
+         httpStatus: "INTERNAL_SERVER_ERROR",
+         reason: "Internal Server Error",
+         message: "Oops, algo salió mal, por favor intenta más tarde.",
+         httpStatusCode: 500
+      })
+   }
+}
+
+
+export const editarGrupo = async ({ body, id, accessToken }) => {
+   try {
+     const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/grupos-lineas/grupo/${id}`,
+         body, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` } })
+
+      return response.data
+   } catch (error) {
+      throw new Error(error ?? {
+         httpStatus: "INTERNAL_SERVER_ERROR",
+         reason: "Internal Server Error",
+         message: "Oops, algo salió mal, por favor intenta más tarde.",
+         httpStatusCode: 500
+      })
+   }
+}
+
+
+export const eliminarGrupo = async ({ id, accessToken }) => {
+   try {
+      const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/grupos-lineas/grupo/${id}`,
+         { headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` } })
+
+      return response.data
+   } catch (error) {
+      throw new Error(error ?? {
+         httpStatus: "INTERNAL_SERVER_ERROR",
+         reason: "Internal Server Error",
+         message: "Oops, algo salió mal, por favor intenta más tarde.",
+         httpStatusCode: 500
+      })
+   }
+}
+
+export const crearLinea = async ({ body, accessToken }) => {
+   try {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/grupos-lineas/linea`,
+         body, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` } })
+
+      return response.data
+   } catch (error) {
+      throw new Error(error ?? {
+         httpStatus: "INTERNAL_SERVER_ERROR",
+         reason: "Internal Server Error",
+         message: "Oops, algo salió mal, por favor intenta más tarde.",
+         httpStatusCode: 500
+      })
+   }
+}
+
+
+export const editarLinea = async ({ body, id, accessToken }) => {
+   try {
+     const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/grupos-lineas/linea/${id}`,
+         body, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` } })
+
+      return response.data
+   } catch (error) {
+      throw new Error(error ?? {
+         httpStatus: "INTERNAL_SERVER_ERROR",
+         reason: "Internal Server Error",
+         message: "Oops, algo salió mal, por favor intenta más tarde.",
+         httpStatusCode: 500
+      })
+   }
+}
+
+
+export const eliminarLinea = async ({ id, accessToken }) => {
+   try {
+      const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/grupos-lineas/linea/${id}`,
+         { headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` } })
+
+      return response.data
+   } catch (error) {
+      throw new Error(error ?? {
+         httpStatus: "INTERNAL_SERVER_ERROR",
+         reason: "Internal Server Error",
+         message: "Oops, algo salió mal, por favor intenta más tarde.",
+         httpStatusCode: 500
+      })
+   }
+}
+
+export const listarProgramas = async ({ body, accessToken }) => {
+   try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/programas/listar`,
+         body, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` } })
+
+      return response.data
+   } catch (error) {
+      throw new Error(error ?? {
+         httpStatus: "INTERNAL_SERVER_ERROR",
+         reason: "Internal Server Error",
+         message: "Oops, algo salió mal, por favor intenta más tarde.",
+         httpStatusCode: 500
+      })
+   }
+}
+
 export const importarDocumentos = async ({ idProyecto, tag, tipoDoc, accessToken, archivos }) => {
    try {
       const formData = new FormData()

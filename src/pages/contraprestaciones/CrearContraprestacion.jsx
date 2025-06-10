@@ -17,7 +17,7 @@ import AlertaModal from '../../components/AlertaModal'
 const CrearContraprestacion = () => {
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
-    
+
     // Estados para los datos del formulario
     const [estudianteId, setEstudianteId] = useState(null)
     const [tipoContraprestacionId, setTipoContraprestacionId] = useState(null)
@@ -29,8 +29,6 @@ const CrearContraprestacion = () => {
     // Estados para los datos dinámicos
     const [estudiantes, setEstudiantes] = useState([])
     const [tiposContraprestacion, setTiposContraprestacion] = useState([])
-    const [estudianteSeleccionado, setEstudianteSeleccionado] = useState('Seleccionar estudiante')
-    const [tipoSeleccionado, setTipoSeleccionado] = useState('Seleccionar tipo')
 
     // Estados para AlertaModal
     const [alertaModalOpen, setAlertaModalOpen] = useState(false)
@@ -44,14 +42,14 @@ const CrearContraprestacion = () => {
     const extraerMensajeError = async (response) => {
         try {
             const data = await response.json()
-            
+
             // Estructura de respuesta de error del backend
             // Posibles campos donde puede venir el mensaje de error
-            return data.message || 
-                   data.mensaje || 
-                   data.error || 
-                   data.reason || 
-                   'Error en la operación'
+            return data.message ||
+                data.mensaje ||
+                data.error ||
+                data.reason ||
+                'Error en la operación'
         } catch (error) {
             return 'Error en la comunicación con el servidor'
         }
@@ -85,8 +83,8 @@ const CrearContraprestacion = () => {
             })
             .catch(err => {
                 showAlerta(
-                    err.message, 
-                    'error', 
+                    err.message,
+                    'error',
                     'Error al cargar tipos'
                 )
             })
@@ -105,8 +103,8 @@ const CrearContraprestacion = () => {
             })
             .catch(err => {
                 showAlerta(
-                    err.message, 
-                    'error', 
+                    err.message,
+                    'error',
                     'Error al cargar estudiantes'
                 )
             })
@@ -120,15 +118,13 @@ const CrearContraprestacion = () => {
         setFechaInicio(null)
         setFechaFin(null)
         setPorcentaje('')
-        setEstudianteSeleccionado('Seleccionar estudiante')
-        setTipoSeleccionado('Seleccionar tipo')
     }
 
     // Enviar formulario
     const onSubmit = async (e) => {
         e.preventDefault()
         setLoading(true)
-    
+
         // Validar campos requeridos
         if (!estudianteId || !tipoContraprestacionId || !actividades || !fechaInicio) {
             showAlerta(
@@ -183,7 +179,7 @@ const CrearContraprestacion = () => {
             if (!response.ok) {
                 // Extraer mensaje de error específico
                 let errorMessage = 'Error al crear la contraprestación'
-                
+
                 if (data && data.message) {
                     errorMessage = data.message
                 } else if (data && data.mensaje) {
@@ -197,24 +193,24 @@ const CrearContraprestacion = () => {
                 } else if (response.status === 409) {
                     errorMessage = 'Ya existe una contraprestación para este estudiante en el semestre actual'
                 }
-                
+
                 throw new Error(errorMessage)
             }
 
             // Extraer mensaje de éxito directamente del objeto HttpResponse
-            const successMessage = data && data.message 
-                ? data.message 
+            const successMessage = data && data.message
+                ? data.message
                 : "Contraprestación creada con éxito"
-            
+
             // Mostrar mensaje de éxito exactamente como viene del backend
             showAlerta(
                 successMessage,
                 'success',
                 'Contraprestación creada'
             )
-            
+
             limpiarCampos()
-            
+
             // Navegar después de 2 segundos para dar tiempo a ver el mensaje
             setTimeout(() => {
                 navigate('/contraprestaciones')
@@ -265,14 +261,10 @@ const CrearContraprestacion = () => {
                                 isRequired
                                 onSelectionChange={(id) => {
                                     if (id) {
-                                        const estudianteSeleccionado = estudiantes.find(est => est.id.toString() === id);
+                                        // const estudianteSeleccionado = estudiantes.find(est => est.id.toString() === id);
                                         setEstudianteId(parseInt(id));
-                                        setEstudianteSeleccionado(
-                                            `${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido} - ${estudianteSeleccionado.codigo}`
-                                        );
                                     } else {
                                         setEstudianteId(null);
-                                        setEstudianteSeleccionado('Seleccionar estudiante');
                                     }
                                 }}
                             >
@@ -311,11 +303,9 @@ const CrearContraprestacion = () => {
                                         if (id) {
                                             const tipoSeleccionado = tiposContraprestacion.find(tipo => tipo.id.toString() === id);
                                             setTipoContraprestacionId(parseInt(id));
-                                            setTipoSeleccionado(tipoSeleccionado.nombre);
                                             setPorcentaje(`${tipoSeleccionado.porcentaje}`);
                                         } else {
                                             setTipoContraprestacionId(null);
-                                            setTipoSeleccionado('Seleccionar tipo');
                                             setPorcentaje('');
                                         }
                                     }}

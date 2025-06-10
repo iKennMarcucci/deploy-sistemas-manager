@@ -26,7 +26,8 @@ const Tabla = ({
   columnas,
   acciones = [],
   elementosPorPagina,
-  filtros
+  filtros,
+  cargandoContenido = false
 }) => {
   //-------filtros--------
   const [filtross, setfiltross] = useState({})
@@ -189,7 +190,7 @@ const Tabla = ({
           )}
         </TableBody>
       </Table>
-      {items.length === 0 && informacion.length === 0 && (
+      {cargandoContenido && (
         <div className='flex justify-center items-center'>
           <Spinner size='lg' color='danger' />
         </div>
@@ -258,7 +259,8 @@ Tabla.propTypes = {
     })
   ),
   elementosPorPagina: PropTypes.number,
-  filtros: PropTypes.array
+  filtros: PropTypes.array,
+  cargandoContenido: PropTypes.bool
 }
 
 export default Tabla

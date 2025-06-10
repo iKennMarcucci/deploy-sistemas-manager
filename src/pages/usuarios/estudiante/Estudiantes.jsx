@@ -7,10 +7,12 @@ import Boton from '../../../components/Boton'
 const Estudiantes = () => {
   const [estudiantes, setEstudiantes] = useState([])
   const [informacion, setInformacion] = useState([])
+  const [cargandoEstudiantes, setCargandoEstudiantes] = useState(true)
   const backendUrl = import.meta.env.VITE_BACKEND_URL
   const Navigate = useNavigate()
 
   useEffect(() => {
+    setCargandoEstudiantes(true)
     fetch(`${backendUrl}/estudiantes`)
       .then((response) => response.json())
       .then((data) => {
@@ -41,6 +43,7 @@ const Estudiantes = () => {
 
       setInformacion(estudiantesConDatos)
     }
+    setCargandoEstudiantes(false)
   }, [estudiantes])
 
   const verEstudiante = (estudiante) => {
@@ -72,18 +75,18 @@ const Estudiantes = () => {
 
   return (
     <div className='p-4 w-full flex flex-col items-center justify-center'>
-      <p className='text-center text-titulos'>Lista de estudiantes</p>
+      <div className='w-full flex items-center justify-between mb-8'>
+        <p className='text-center text-titulos flex-1'>Lista de estudiantes</p>
+        <Boton onClick={handleRegistrar}>Crear estudiante</Boton>
+      </div>
       <div className='w-full my-8'>
         <Tabla
           informacion={informacion}
           columnas={columnas}
           filtros={filtros}
           acciones={acciones}
+          cargandoContenido={cargandoEstudiantes}
         />
-      </div>
-
-      <div className='w-full flex justify-end mt-4'>
-        <Boton onClick={handleRegistrar}>Crear estudiante</Boton>
       </div>
     </div>
   )
